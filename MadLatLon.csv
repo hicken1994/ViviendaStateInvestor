@@ -1,0 +1,132 @@
+codigo_distrito;distrito;codigo_barrio;barrio;latitud;longitud
+1;Centro;11;Palacio;404.153;-37.143
+1;Centro;12;Embajadores;404.086;-37.038
+1;Centro;13;Cortes;40.414;-36.975
+1;Centro;14;Justicia;40.423;-36.978
+1;Centro;15;Universidad;404.253;-37.074
+1;Centro;16;Sol;404.169;-37.035
+2;Arganzuela;21;Imperial;404.053;-37.174
+2;Arganzuela;22;Acacias;404.037;-37.063
+2;Arganzuela;23;Chopera;403.936;-36.991
+2;Arganzuela;24;Legazpi;403.869;-36.954
+2;Arganzuela;25;Delicias;403.958;-36.925
+2;Arganzuela;26;Palos de la Frontera;404.012;-3.692
+2;Arganzuela;27;Atocha;404.066;-36.902
+3;Retiro;31;Pacífico;404.017;-36.765
+3;Retiro;32;Adelfas;40.401;-3.666
+3;Retiro;33;Estrella;404.125;-36.633
+3;Retiro;34;Ibiza;404.186;-36.742
+3;Retiro;35;Los Jerónimos;404.146;-36.892
+3;Retiro;36;Niño Jesús;404.123;-36.701
+4;Salamanca;41;Recoletos;404.215;-36.908
+4;Salamanca;42;Goya;404.241;-36.755
+4;Salamanca;43;Fuente del Berro;404.247;-36.648
+4;Salamanca;44;Guindalera;40.435;-36.695
+4;Salamanca;45;Lista;404.305;-3.675
+4;Salamanca;46;Castellana;404.356;-36.882
+5;Chamartín;51;El Viso;40.445;-36.925
+5;Chamartín;52;Prosperidad;404.428;-36.738
+5;Chamartín;53;Ciudad Jardín;404.502;-36.772
+5;Chamartín;54;Hispanoamérica;404.583;-36.821
+5;Chamartín;55;Nueva España;404.635;-36.848
+5;Chamartín;56;Castilla;404.725;-36.885
+6;Tetuán;61;Bellas Vistas;404.522;-37.085
+6;Tetuán;62;Cuatro Caminos;404.469;-37.035
+6;Tetuán;63;Castillejos;404.597;-36.902
+6;Tetuán;64;Almenara;404.695;-36.955
+6;Tetuán;65;Valdeacederas;404.648;-3.704
+6;Tetuán;66;Berruguete;40.456;-3.707
+7;Chamberí;71;Gaztambide;40.434;-3.714
+7;Chamberí;72;Arapiles;404.332;-37.072
+7;Chamberí;73;Trafalgar;404.298;-37.015
+7;Chamberí;74;Almagro;404.315;-36.925
+7;Chamberí;75;Ríos Rosas;404.412;-3.698
+7;Chamberí;76;Vallehermoso;404.415;-37.115
+8;Fuencarral-El Pardo;81;El Pardo;405.145;-3.775
+8;Fuencarral-El Pardo;82;Fuentelarreina;404.805;-3.739
+8;Fuencarral-El Pardo;83;Peñagrande;40.476;-3.713
+8;Fuencarral-El Pardo;84;Pilar;404.788;-3.702
+8;Fuencarral-El Pardo;85;La Paz;404.802;-36.882
+8;Fuencarral-El Pardo;86;Valverde;40.495;-3.685
+8;Fuencarral-El Pardo;87;Mirasierra;404.915;-37.105
+8;Fuencarral-El Pardo;88;El Goloso;40.558;-3.712
+9;Moncloa-Aravaca;91;Casa de Campo;40.418;-3.756
+9;Moncloa-Aravaca;92;Argüelles;40.43;-3.716
+9;Moncloa-Aravaca;93;Ciudad Universitaria;404.435;-37.275
+9;Moncloa-Aravaca;94;Valdezarza;40.466;-3.725
+9;Moncloa-Aravaca;95;Valdemarín;40.47;-3.78
+9;Moncloa-Aravaca;96;El Plantío;404.705;-3.79
+9;Moncloa-Aravaca;97;Aravaca;40.448;-3.785
+10;Latina;101;Los Cármenes;40.402;-3.731
+10;Latina;102;Puerta del Ángel;40.413;-3.726
+10;Latina;103;Lucero;404.055;-37.385
+10;Latina;104;Aluche;40.386;-3.756
+10;Latina;105;Campamento;403.945;-37.705
+10;Latina;106;Cuatro Vientos;403.775;-3.788
+10;Latina;107;Águilas;40.379;-3.77
+11;Carabanchel;111;Comillas;40.392;-3.711
+11;Carabanchel;112;Opañel;403.905;-3.723
+11;Carabanchel;113;San Isidro;403.945;-3.733
+11;Carabanchel;114;Vista Alegre;40.387;-3.74
+11;Carabanchel;115;Puerta Bonita;40.384;-3.735
+11;Carabanchel;116;Buenavista;40.375;-3.735
+11;Carabanchel;117;Abrantes;40.38;-3.72
+12;Usera;121;Orcasitas;40.365;-3.71
+12;Usera;122;Orcasur;40.36;-3.69
+12;Usera;123;San Fermín;40.37;-3.69
+12;Usera;124;Almendrales;40.38;-3.7
+12;Usera;125;Moscardó;40.39;-3.71
+12;Usera;126;Zofío;40.375;-3.72
+12;Usera;127;Pradolongo;40.37;-3.705
+13;Puente de Vallecas;131;Entrevías;40.38;-3.67
+13;Puente de Vallecas;132;San Diego;40.39;-3.66
+13;Puente de Vallecas;133;Palomeras Bajas;40.385;-3.64
+13;Puente de Vallecas;134;Palomeras Sureste;40.395;-3.62
+13;Puente de Vallecas;135;Portazgo;40.392;-3.65
+13;Puente de Vallecas;136;Numancia;40.4;-3.66
+14;Moratalaz;141;Pavones;40.4;-3.63
+14;Moratalaz;142;Horcajo;40.405;-3.62
+14;Moratalaz;143;Marroquina;40.41;-3.64
+14;Moratalaz;144;Media Legua;40.415;-3.65
+14;Moratalaz;145;Fontarrón;40.405;-3.66
+14;Moratalaz;146;Vinateros;40.41;-3.655
+15;Ciudad Lineal;151;Ventas;40.43;-3.65
+15;Ciudad Lineal;152;Pueblo Nuevo;40.435;-3.64
+15;Ciudad Lineal;153;Quintana;40.44;-3.63
+15;Ciudad Lineal;154;La Concepción;40.445;-3.65
+15;Ciudad Lineal;155;San Pascual;40.45;-3.645
+15;Ciudad Lineal;156;San Juan Bautista;40.455;-3.65
+15;Ciudad Lineal;157;Colina;40.46;-3.66
+15;Ciudad Lineal;158;Atalaya;40.465;-3.655
+15;Ciudad Lineal;159;Costillares;40.47;-3.66
+16;Hortaleza;161;Palomas;40.47;-3.62
+16;Hortaleza;162;Piovera;40.465;-3.63
+16;Hortaleza;163;Canillas;40.46;-3.64
+16;Hortaleza;164;Pinar del Rey;40.455;-3.65
+16;Hortaleza;165;Apóstol Santiago;40.465;-3.655
+16;Hortaleza;166;Valdefuentes;40.48;-3.65
+17;Villaverde;171;Villaverde Alto;40.35;-3.7
+17;Villaverde;172;San Cristóbal;40.345;-3.69
+17;Villaverde;173;Butarque;40.36;-3.7
+17;Villaverde;174;Los Rosales;40.355;-3.71
+17;Villaverde;175;Ángeles;40.34;-3.7
+18;Villa de Vallecas;181;Casco Histórico de Vallecas;40.37;-3.6
+18;Villa de Vallecas;182;Santa Eugenia;40.38;-3.61
+18;Villa de Vallecas;183;Ensanche de Vallecas;40.37;-3.58
+19;Vicálvaro;191;Casco Histórico de Vicálvaro;40.4;-3.6
+19;Vicálvaro;192;Valdebernardo;40.395;-3.62
+19;Vicálvaro;193;Valderrivas;40.39;-3.6
+19;Vicálvaro;194;El Cañaveral;40.41;-3.55
+20;San Blas-Canillejas;201;Simancas;40.43;-3.63
+20;San Blas-Canillejas;202;Hellín;40.435;-3.62
+20;San Blas-Canillejas;203;Amposta;40.43;-3.61
+20;San Blas-Canillejas;204;Arcos;40.44;-3.6
+20;San Blas-Canillejas;205;Rosas;40.445;-3.59
+20;San Blas-Canillejas;206;Rejas;40.45;-3.57
+20;San Blas-Canillejas;207;Canillejas;40.445;-3.61
+20;San Blas-Canillejas;208;El Salvador;40.455;-3.63
+21;Barajas;211;Alameda de Osuna;40.455;-3.585
+21;Barajas;212;Aeropuerto;40.47;-3.57
+21;Barajas;213;Casco Histórico de Barajas;40.475;-3.58
+21;Barajas;214;Timón;40.48;-3.59
+21;Barajas;215;Corralejos;40.465;-3.6

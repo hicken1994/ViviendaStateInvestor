@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="idealista_madrid.csv">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/datos reales/idealista_madrid.csv.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
