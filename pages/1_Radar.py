@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.db import get_top_opportunities
+from utils.db import get_top_opportunities, simulate_market
 
 st.title("📡 Radar de oportunidades")
 
@@ -13,6 +13,8 @@ df = get_top_opportunities(300)
 if df.empty:
     st.warning("No hay datos disponibles")
     st.stop()
+
+df = simulate_market(df)  # 🔥 ACTIVAR
 
 # ========================
 # SCORING CONSERVADOR (ALINEADO CON PROPIEDAD)
@@ -139,6 +141,43 @@ display_df.columns = [
 st.dataframe(display_df.head(20), use_container_width=True)
 
 # ========================
+# 🔥 NUEVAS OPORTUNIDADES (FOMO)
+# ========================
+
+st.markdown("## 🚨 Oportunidades detectadas")
+
+def is_opportunity(row):
+    return (
+        row.get("score_radar", 0) >= 65 and
+        row.get("rentabilidad_estimada", 0) >= 6
+    )
+
+opps = df[df.apply(is_opportunity, axis=1)].copy()
+
+if not opps.empty:
+
+    opps = opps.sort_values("score_radar", ascending=False).head(5)
+
+    for _, row in opps.iterrows():
+        st.error(f"""
+🔥 NUEVA OPORTUNIDAD
+
+📍 {row['barrio']}
+💰 {int(row['precio_total']):,} €
+📊 Score: {round(row['score_radar'],1)}
+📈 {round(row.get('rentabilidad_estimada',0),1)}%
+⏱️ Lleva {row.get('dias', '?')} días en mercado
+
+👉 **Revisar ahora**
+""")
+        if st.button(f"Ver oportunidad {row['barrio']} {row['precio_total']}"):
+            st.session_state.selected_property = row.to_dict()
+            st.switch_page("pages/3_Propiedad.py")
+
+else:
+    st.info("No hay oportunidades claras ahora")
+
+# ========================
 # INSIGHT
 # ========================
 
@@ -149,7 +188,7 @@ best = df.iloc[0]
 st.success(f"""
 👉 Mejor candidata a analizar: **{best['barrio']}**
 
-💰 {int(best['precio_total']):,} €  
+💰 {int(best['precio_total']):,} €
 📊 Score: {round(best['score_radar'],1)}
 
 ➡️ Validar en detalle antes de tomar decisión.

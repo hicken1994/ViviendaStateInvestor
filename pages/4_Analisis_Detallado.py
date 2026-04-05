@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.db import get_top_opportunities
+from utils.db import get_top_opportunities, simulate_market
 from openai import OpenAI
 import json
 
@@ -19,6 +19,28 @@ if st.button("🧹 Limpiar contexto"):
 prop = st.session_state.get("copilot_property")
 
 df = get_top_opportunities(300)
+df = simulate_market(df)  # 🔥 ACTIVAR
+
+# ========================
+# 🏆 OPORTUNIDAD DEL DÍA
+# ========================
+
+if not df.empty:
+    best = df.sort_values("score_total", ascending=False).iloc[0]
+
+    st.markdown("## 🏆 Oportunidad del Día")
+
+    st.success(f"""
+🔥 MEJOR OPORTUNIDAD HOY
+
+{best['barrio']}
+💰 {int(best['precio_total']):,} €
+
+👉 Si encaja contigo, revisa ahora
+👉 Este tipo de oportunidades no duran mucho
+""")
+
+    st.divider()
 
 # ========================
 # 🏠 HEADER PROPIEDAD
@@ -35,7 +57,7 @@ if mode == "Propiedad":
     col1, col2, col3 = st.columns(3)
     col1.metric("Precio", f"{int(prop.get('precio_total',0)):,} €")
     col2.metric("Cashflow", f"{int(prop.get('cashflow',0))} €/mes")
-    col3.metric("Score", prop.get("score_modelo"))
+    col3.metric("Score", prop.get("score_total"))
 
     st.caption(prop.get("barrio"))
 
@@ -45,7 +67,7 @@ if mode == "Propiedad":
 
 def get_top_deals():
 
-    df_sorted = df.sort_values("score_radar", ascending=False)
+    df_sorted = df.sort_values("score_total", ascending=False)
 
     return df_sorted.head(5)
 
@@ -81,7 +103,7 @@ def run_market():
 
 {best['barrio']}  
 💰 {int(best['precio_total']):,} €  
-📊 Score: {round(best['score_radar'],1)}
+📊 Score: {round(best['score_total'],1)}
 
 💸 Oferta recomendada: {estimate_target_price(best):,} €
 """)
@@ -95,7 +117,7 @@ def run_market():
         st.markdown(f"""
 ### {row['barrio']}
 💰 {int(row['precio_total']):,} €  
-📊 Score: {round(row['score_radar'],1)}  
+📊 Score: {round(row['score_total'],1)}  
 
 👉 Ofertar: {target:,} €
 """)
@@ -111,7 +133,7 @@ def run_market():
 def run_property():
 
     decision = prop.get("recomendacion_modelo")
-    score = prop.get("score_modelo", 0)
+    score = prop.get("score_total", 0)
 
     st.markdown("## 🧠 Decisión final")
 

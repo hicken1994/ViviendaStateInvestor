@@ -28,7 +28,7 @@ col1, col2, col3 = st.columns(3)
 
 col1.metric("💰 Precio", f"{int(precio):,} €")
 col2.metric("📊 Score", prop.get("score_total"))
-col3.metric("📈 Rentabilidad estimada", f"{prop.get('rentabilidad_estimada', 0)}%")
+col3.metric("📈 Rentabilidad estimada", f"{round(prop.get('rentabilidad_estimada', 0), 2)}%")
 
 # ========================
 # SIMULACIÓN
@@ -55,7 +55,7 @@ prestamo = precio - entrada
 r = interes / 12
 n = años * 12
 
-cuota = prestamo * (r * (1 + r)**n) / ((1 + r)**n - 1)
+cuota = round(prestamo * (r * (1 + r)**n) / ((1 + r)**n - 1), 2)
 
 # ========================
 # DETECCIÓN MODO
@@ -89,27 +89,27 @@ rent_m2_map = {
 barrio = prop.get("barrio", "")
 precio_m2_alquiler = rent_m2_map.get(barrio, 20)
 
-base_alquiler = precio_m2_alquiler * metros
-alquiler = base_alquiler * 1.15
+base_alquiler = round(precio_m2_alquiler * metros, 2)
+alquiler = round(base_alquiler * 1.15, 2)
 
 # ========================
 # COSTES
 # ========================
 
-gastos_mensuales = alquiler * 0.15
+gastos_mensuales = round(alquiler * 0.15, 2)
 gastos_fijos = 100
 
-cashflow = alquiler - cuota - gastos_mensuales - gastos_fijos
-break_even = (cuota + gastos_fijos) / (1 - 0.15)
+cashflow = round(alquiler - cuota - gastos_mensuales - gastos_fijos, 2)
+break_even = round((cuota + gastos_fijos) / (1 - 0.15), 2)
 
-rentabilidad_real = (alquiler * 12) / total_inversion * 100 if total_inversion else 0
+rentabilidad_real = round((alquiler * 12) / total_inversion * 100, 2) if total_inversion else 0
 
 # ========================
 # MARGEN
 # ========================
 
-margen_euros = alquiler - break_even
-margen_pct = (margen_euros / alquiler) * 100
+margen_euros = round(alquiler - break_even, 2)
+margen_pct = round((margen_euros / alquiler) * 100, 2)
 
 # ========================
 # 🧠 RECOMENDACIÓN (DECISIÓN FINAL)
@@ -135,9 +135,9 @@ st.markdown(f"### 👉 {recomendacion}")
 
 col1, col2, col3 = st.columns(3)
 
-col1.metric("💰 Cashflow", f"{int(cashflow):,} €/mes")
-col2.metric("🎯 Break-even", f"{int(break_even):,} €/mes")
-col3.metric("🛡️ Margen", f"{int(margen_euros)} €")
+col1.metric("💰 Cashflow", f"{cashflow:,.2f} €/mes")
+col2.metric("🎯 Break-even", f"{break_even:,.2f} €/mes")
+col3.metric("🛡️ Margen", f"{margen_euros:,.2f} €")
 
 # ========================
 # INTERPRETACIÓN
@@ -162,10 +162,11 @@ if st.button("🔍 Validar con IA"):
     # ✅ AQUÍ PASAMOS TODO AL COPILOT
     st.session_state.copilot_property = {
         **prop,
-        "cashflow": cashflow,
-        "break_even": break_even,
-        "margen": margen_euros,
-        "margen_pct": margen_pct,
+        "score_total": prop.get("score_total", 0),
+        "cashflow": round(cashflow, 2),
+        "break_even": round(break_even, 2),
+        "margen": round(margen_euros, 2),
+        "margen_pct": round(margen_pct, 2),
         "recomendacion_modelo": recomendacion
     }
 
@@ -180,9 +181,9 @@ if modo == "simple":
     st.markdown(f"""
     💡 **Resumen claro:**
 
-    - Ingreso estimado: **{int(alquiler)}€/mes**
-    - Necesitas: **{int(break_even)}€/mes**
-    - Diferencia: **{int(margen_euros)}€/mes**
+    - Ingreso estimado: **{alquiler:.2f}€/mes**
+    - Necesitas: **{break_even:.2f}€/mes**
+    - Diferencia: **{margen_euros:.2f}€/mes**
     """)
 
     if margen_euros < 200:
@@ -195,15 +196,15 @@ if modo == "simple":
 with st.expander("Ver análisis detallado"):
 
     st.markdown("### 🧠 Estimación de alquiler")
-    st.write(f"{int(base_alquiler)} € base → {int(alquiler)} € ajustado")
+    st.write(f"{base_alquiler:.2f} € base → {alquiler:.2f} € ajustado")
 
     st.markdown("### 💸 Costes")
-    st.write(f"Hipoteca: {int(cuota)} €")
-    st.write(f"Gastos: {int(gastos_mensuales)} €")
-    st.write(f"Fijos: {int(gastos_fijos)} €")
+    st.write(f"Hipoteca: {cuota:.2f} €")
+    st.write(f"Gastos: {gastos_mensuales:.2f} €")
+    st.write(f"Fijos: {gastos_fijos:.2f} €")
 
     st.markdown("### 📊 Rentabilidad")
-    st.metric("Rentabilidad real", f"{rentabilidad_real:.1f}%")
+    st.metric("Rentabilidad real", f"{rentabilidad_real:.2f}%")
 
     st.markdown("### 📈 Escenarios")
 
@@ -213,4 +214,4 @@ with st.expander("Ver análisis detallado"):
         ("Optimista", base_alquiler * 1.25)
     ]:
         cf = val - cuota - (val * 0.15) - gastos_fijos
-        st.write(f"{nombre}: {int(val)}€ → {int(cf)}€/mes")
+        st.write(f"{nombre}: {val:.2f}€ → {cf:.2f}€/mes")
