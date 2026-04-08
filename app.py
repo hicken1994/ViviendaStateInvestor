@@ -72,7 +72,7 @@ with col3:
     st.markdown("### 🏠 Propiedad")
     st.caption("Analiza en detalle si una propiedad es buena inversión.")
     if st.button("Ir a Propiedad", use_container_width=True):
-        st.switch_page("pages/3_Propiedad.py")
+        st.switch_page("pages/3_propiedad.py")
 
 with col4:
     st.markdown("### 🤖 AI Copilot")

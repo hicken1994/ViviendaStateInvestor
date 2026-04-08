@@ -123,7 +123,7 @@ for i, row in top3.iterrows():
 
     if st.button(f"Ver propiedad {i}"):
         st.session_state.selected_property = row.to_dict()
-        st.switch_page("pages/3_Propiedad.py")
+        st.switch_page("pages/3_propiedad.py")
 
 st.caption("⚠️ Radar usa estimaciones. La decisión final se valida en análisis de propiedad (cashflow real).")
 
@@ -193,7 +193,7 @@ if not opps.empty:
 """)
         if st.button(f"Ver oportunidad {row['barrio']} {int(row['precio_total'])}"):
             st.session_state.selected_property = row.to_dict()
-            st.switch_page("pages/3_Propiedad.py")
+            st.switch_page("pages/3_propiedad.py")
 
 else:
     st.info("No hay oportunidades claras ahora con tu perfil actual. Prueba a cambiar de perfil en el sidebar.")

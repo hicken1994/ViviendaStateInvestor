@@ -153,7 +153,7 @@ def run_market():
 
         if st.button(f"Analizar {row['barrio']} {int(row['precio_total'])}"):
             st.session_state.selected_property = row.to_dict()
-            st.switch_page("pages/3_Propiedad.py")
+            st.switch_page("pages/3_propiedad.py")
 
     # ========================
     # DETALLE SCORING (SOLO AVANZADO)

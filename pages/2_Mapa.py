@@ -309,7 +309,7 @@ selected_index = st.selectbox(
 
 if st.button("🔍 Ver propiedad"):
     st.session_state.selected_property = map_plot.loc[selected_index].to_dict()
-    st.switch_page("pages/3_Propiedad.py")
+    st.switch_page("pages/3_propiedad.py")
 
 # ========================
 # TOP
