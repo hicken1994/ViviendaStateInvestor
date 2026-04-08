@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+.env
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Base de datos local
+*.db
+
+# Datos comprimidos / temporales
+*.zip
+*.csv.zip
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
