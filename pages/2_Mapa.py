@@ -1,21 +1,32 @@
 import streamlit as st
 import pandas as pd
-import sqlite3
 import unicodedata
 import pydeck as pdk
 import numpy as np
 
-from utils.db import get_top_opportunities
+from utils.db import get_top_opportunities, get_connection
+from utils.tooltips import tooltip_help
+from utils.profiles import get_perfil
 
 st.set_page_config(layout="wide")
 
 st.title("🗺️ Radar de oportunidades inmobiliarias")
+st.caption("💡 Visualiza las mejores oportunidades de inversión en el mapa de Madrid.")
+
+# ========================
+# PERFIL
+# ========================
+
+perfil_nombre = st.session_state.get("perfil_inversion", "intermedio")
+perfil = get_perfil(perfil_nombre)
+
+st.info(f"🎯 Perfil activo: **{perfil['nombre']}** — {perfil['descripcion']}")
 
 # ========================
 # DB
 # ========================
 
-conn = sqlite3.connect("real_estate.db")
+conn = get_connection()
 
 # ========================
 # FUNCIONES
@@ -92,7 +103,8 @@ st.sidebar.header("Filtros")
 
 min_score = st.sidebar.slider(
     "Opportunity Score mínimo",
-    0, 100, 60
+    0, 100, 60,
+    help=tooltip_help("score_total")
 )
 
 df = df[df["score_total"] >= min_score]
@@ -104,8 +116,8 @@ df = df[df["score_total"] >= min_score]
 col1, col2, col3 = st.columns(3)
 
 col1.metric("📊 Oportunidades", len(df))
-col2.metric("💰 Precio medio", f"{int(df['precio_total'].mean()):,} €" if len(df) else "0 €")
-col3.metric("🔥 Score medio", round(df["score_total"].mean(), 1) if len(df) else 0)
+col2.metric("💰 Precio medio", f"{int(df['precio_total'].mean()):,} €" if len(df) else "0 €", help=tooltip_help("precio_total"))
+col3.metric("🔥 Score medio", round(df["score_total"].mean(), 1) if len(df) else 0, help=tooltip_help("score_total"))
 
 # ========================
 # MAPA BASE
@@ -124,10 +136,10 @@ map_plot = map_plot.rename(columns={
 # JITTER
 # ========================
 
-np.random.seed(42)
+rng = np.random.default_rng(42)
 
-map_plot["lat"] += np.random.uniform(-0.002, 0.002, size=len(map_plot))
-map_plot["lon"] += np.random.uniform(-0.002, 0.002, size=len(map_plot))
+map_plot["lat"] += rng.uniform(-0.002, 0.002, size=len(map_plot))
+map_plot["lon"] += rng.uniform(-0.002, 0.002, size=len(map_plot))
 
 # ========================
 # FORMATO DATOS (PRO)

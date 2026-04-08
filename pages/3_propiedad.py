@@ -1,6 +1,18 @@
 import streamlit as st
+from utils.tooltips import tooltip_help
+from utils.profiles import get_perfil, get_recomendacion_perfil
 
 st.title("🏠 Análisis de propiedad")
+st.caption("💡 Aquí se analiza en detalle si una propiedad es buena inversión para ti.")
+
+# ========================
+# PERFIL
+# ========================
+
+perfil_nombre = st.session_state.get("perfil_inversion", "intermedio")
+perfil = get_perfil(perfil_nombre)
+
+st.info(f"🎯 Perfil activo: **{perfil['nombre']}** — {perfil['descripcion']}")
 
 # ========================
 # VALIDACIÓN
@@ -26,9 +38,9 @@ st.subheader(prop.get("barrio"))
 
 col1, col2, col3 = st.columns(3)
 
-col1.metric("💰 Precio", f"{int(precio):,} €")
-col2.metric("📊 Score", prop.get("score_total"))
-col3.metric("📈 Rentabilidad estimada", f"{round(prop.get('rentabilidad_estimada', 0), 2)}%")
+col1.metric("💰 Precio", f"{int(precio):,} €", help=tooltip_help("precio_total"))
+col2.metric("📊 Score", round(prop.get("score_total", 0), 2), help=tooltip_help("score_total"))
+col3.metric("📈 Rentabilidad estimada", f"{round(prop.get('rentabilidad_estimada', 0), 2)}%", help=tooltip_help("rentabilidad_estimada"))
 
 # ========================
 # SIMULACIÓN
@@ -36,15 +48,16 @@ col3.metric("📈 Rentabilidad estimada", f"{round(prop.get('rentabilidad_estima
 
 st.divider()
 st.subheader("🏦 Simulación de inversión")
+st.caption(tooltip_help("entrada"))
 
 col1, col2, col3 = st.columns(3)
 
-entrada_pct = col1.slider("Entrada (%)", 10, 40, 20) / 100
-interes = col2.slider("Interés (%)", 1.0, 6.0, 3.5) / 100
-años = col3.slider("Años", 10, 40, 30)
+entrada_pct = col1.slider("Entrada (%)", 10, 40, perfil["entrada_pct"], help=tooltip_help("entrada")) / 100
+interes = col2.slider("Interés (%)", 1.0, 6.0, float(perfil["interes"]), help=tooltip_help("interes")) / 100
+años = col3.slider("Años", 10, 40, perfil["años"], help=tooltip_help("años_hipoteca"))
 
-reforma = st.number_input("Coste reforma (€)", value=15000)
-gastos_pct = st.slider("Gastos compra (%)", 5, 15, 10) / 100
+reforma = st.number_input("Coste reforma (€)", value=perfil["reforma"], help=tooltip_help("reforma"))
+gastos_pct = st.slider("Gastos compra (%)", 5, 15, perfil["gastos_pct"], help=tooltip_help("gastos_compra")) / 100
 
 entrada = precio * entrada_pct
 gastos = precio * gastos_pct
@@ -61,7 +74,7 @@ cuota = round(prestamo * (r * (1 + r)**n) / ((1 + r)**n - 1), 2)
 # DETECCIÓN MODO
 # ========================
 
-default_values = {"entrada": 0.20, "interes": 0.035, "años": 30}
+default_values = {"entrada": perfil["entrada_pct"] / 100, "interes": perfil["interes"] / 100, "años": perfil["años"]}
 
 is_advanced = (
     abs(entrada_pct - default_values["entrada"]) > 0.01 or
@@ -109,18 +122,14 @@ rentabilidad_real = round((alquiler * 12) / total_inversion * 100, 2) if total_i
 # ========================
 
 margen_euros = round(alquiler - break_even, 2)
-margen_pct = round((margen_euros / alquiler) * 100, 2)
+margen_pct = round((margen_euros / alquiler) * 100, 2) if alquiler else 0
 
 # ========================
-# 🧠 RECOMENDACIÓN (DECISIÓN FINAL)
+# 🧠 RECOMENDACIÓN ADAPTADA AL PERFIL
 # ========================
 
-if cashflow > 0 and margen_pct > 25:
-    recomendacion = "🟢 BUENA COMPRA"
-elif cashflow > 0:
-    recomendacion = "🟡 OPERACIÓN JUSTA"
-else:
-    recomendacion = "🔴 NO COMPRAR"
+score_total = prop.get("score_total", 0)
+recomendacion = get_recomendacion_perfil(perfil, cashflow, margen_pct, score_total)
 
 # ========================
 # 🚀 HERO
@@ -135,9 +144,9 @@ st.markdown(f"### 👉 {recomendacion}")
 
 col1, col2, col3 = st.columns(3)
 
-col1.metric("💰 Cashflow", f"{cashflow:,.2f} €/mes")
-col2.metric("🎯 Break-even", f"{break_even:,.2f} €/mes")
-col3.metric("🛡️ Margen", f"{margen_euros:,.2f} €")
+col1.metric("💰 Cashflow", f"{cashflow:,.2f} €/mes", help=tooltip_help("cashflow"))
+col2.metric("🎯 Break-even", f"{break_even:,.2f} €/mes", help=tooltip_help("break_even"))
+col3.metric("🛡️ Margen", f"{margen_euros:,.2f} €", help=tooltip_help("margen"))
 
 # ========================
 # INTERPRETACIÓN
@@ -153,6 +162,28 @@ else:
     st.success("Margen sólido — operación defensiva")
 
 # ========================
+# 📊 DETALLE SCORING POR PERFIL
+# ========================
+
+if perfil.get("mostrar_detalle_scoring"):
+    st.divider()
+    st.markdown("### 🧪 Desglose del scoring")
+    st.caption("Visible solo para perfil avanzado.")
+
+    score_cols = {
+        "score_descuento": "Descuento",
+        "score_precio": "Precio vs Barrio",
+        "score_liquidez": "Liquidez",
+        "score_tamano": "Tamaño",
+        "score_ruido": "Ruido",
+    }
+
+    cols = st.columns(len(score_cols))
+    for idx, (key, label) in enumerate(score_cols.items()):
+        val = prop.get(key, 0)
+        cols[idx].metric(label, round(val, 2) if val else 0, help=tooltip_help(key))
+
+# ========================
 # UX → SIGUIENTE PASO
 # ========================
 
@@ -162,21 +193,22 @@ if st.button("🔍 Validar con IA"):
     # ✅ AQUÍ PASAMOS TODO AL COPILOT
     st.session_state.copilot_property = {
         **prop,
-        "score_total": prop.get("score_total", 0),
+        "score_total": round(prop.get("score_total", 0), 2),
         "cashflow": round(cashflow, 2),
         "break_even": round(break_even, 2),
         "margen": round(margen_euros, 2),
         "margen_pct": round(margen_pct, 2),
-        "recomendacion_modelo": recomendacion
+        "recomendacion_modelo": recomendacion,
+        "perfil_inversion": perfil_nombre,
     }
 
     st.switch_page("pages/4_Analisis_Detallado.py")
 
 # ========================
-# MODO SIMPLE
+# MODO SIMPLE (PARA PERFIL BÁSICO)
 # ========================
 
-if modo == "simple":
+if modo == "simple" or perfil_nombre == "basico":
 
     st.markdown(f"""
     💡 **Resumen claro:**
@@ -190,28 +222,31 @@ if modo == "simple":
         st.warning("Cualquier imprevisto puede eliminar la rentabilidad")
 
 # ========================
-# DETALLE
+# ESCENARIOS (INTERMEDIO Y AVANZADO)
 # ========================
 
-with st.expander("Ver análisis detallado"):
+if perfil.get("mostrar_escenarios"):
 
-    st.markdown("### 🧠 Estimación de alquiler")
-    st.write(f"{base_alquiler:.2f} € base → {alquiler:.2f} € ajustado")
+    with st.expander("Ver análisis detallado"):
 
-    st.markdown("### 💸 Costes")
-    st.write(f"Hipoteca: {cuota:.2f} €")
-    st.write(f"Gastos: {gastos_mensuales:.2f} €")
-    st.write(f"Fijos: {gastos_fijos:.2f} €")
+        st.markdown("### 🧠 Estimación de alquiler")
+        st.caption(tooltip_help("rentabilidad_real"))
+        st.write(f"{base_alquiler:.2f} € base → {alquiler:.2f} € ajustado")
 
-    st.markdown("### 📊 Rentabilidad")
-    st.metric("Rentabilidad real", f"{rentabilidad_real:.2f}%")
+        st.markdown("### 💸 Costes")
+        st.write(f"Hipoteca: {cuota:.2f} €")
+        st.write(f"Gastos: {gastos_mensuales:.2f} €")
+        st.write(f"Fijos: {gastos_fijos:.2f} €")
 
-    st.markdown("### 📈 Escenarios")
+        st.markdown("### 📊 Rentabilidad")
+        st.metric("Rentabilidad real", f"{rentabilidad_real:.2f}%", help=tooltip_help("rentabilidad_real"))
 
-    for nombre, val in [
-        ("Conservador", base_alquiler),
-        ("Esperado", alquiler),
-        ("Optimista", base_alquiler * 1.25)
-    ]:
-        cf = val - cuota - (val * 0.15) - gastos_fijos
-        st.write(f"{nombre}: {val:.2f}€ → {cf:.2f}€/mes")
+        st.markdown("### 📈 Escenarios")
+
+        for nombre, val in [
+            ("Conservador", base_alquiler),
+            ("Esperado", alquiler),
+            ("Optimista", base_alquiler * 1.25)
+        ]:
+            cf = val - cuota - (val * 0.15) - gastos_fijos
+            st.write(f"{nombre}: {val:.2f}€ → {cf:.2f}€/mes")

@@ -108,6 +108,7 @@ def compute_investment_metrics(row):
             "score_precio": None,
             "score_liquidez": None,
             "score_tamano": None,
+            "score_ruido": None,
             "rentabilidad_estimada": None,
             "decision": None
         }
