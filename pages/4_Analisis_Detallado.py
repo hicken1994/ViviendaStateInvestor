@@ -2,10 +2,8 @@ import streamlit as st
 from utils.db import get_top_opportunities, simulate_market
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
-from openai import OpenAI
 import json
 
-client = OpenAI()
 
 st.title("🤖 Copilot de inversión")
 st.caption("💡 Tu asistente inteligente para tomar decisiones de inversión informadas.")
@@ -229,7 +227,22 @@ def run_property():
     # IA SOLO PARA MEJORA
     # ========================
 
-    prompt = f"""
+    if st.button("🤖 Generar análisis con IA"):
+
+        api_key = st.secrets.get("OPENAI_API_KEY", None) if hasattr(st, "secrets") else None
+
+        if not api_key:
+            import os
+            api_key = os.environ.get("OPENAI_API_KEY")
+
+        if not api_key:
+            st.warning("⚠️ No hay API key de OpenAI configurada. Añade `OPENAI_API_KEY` en Streamlit Secrets o como variable de entorno.")
+        else:
+            try:
+                from openai import OpenAI
+                client = OpenAI(api_key=api_key)
+
+                prompt = f"""
 Eres un inversor experto. Perfil del inversor: {perfil['nombre']} - {perfil['descripcion']}.
 
 Propiedad:
@@ -245,33 +258,33 @@ Devuelve JSON:
 }}
 """
 
-    res = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.2
-    )
+                with st.spinner("Analizando con IA..."):
+                    res = client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0.2
+                    )
 
-    try:
-        txt = res.choices[0].message.content
-        js = txt[txt.index("{"):txt.rindex("}")+1]
-        data = json.loads(js)
+                txt = res.choices[0].message.content
+                js = txt[txt.index("{"):txt.rindex("}")+1]
+                data = json.loads(js)
 
-        st.markdown("### 🤖 Optimización IA")
+                st.markdown("### 🤖 Optimización IA")
 
-        if data.get("precio_objetivo"):
-            st.success(f"💸 Precio objetivo IA: {int(data['precio_objetivo']):,} €")
-            st.caption(tooltip_help("precio_objetivo"))
+                if data.get("precio_objetivo"):
+                    st.success(f"💸 Precio objetivo IA: {int(data['precio_objetivo']):,} €")
+                    st.caption(tooltip_help("precio_objetivo"))
 
-        for a in data.get("acciones", []):
-            st.write(f"- {a}")
+                for a in data.get("acciones", []):
+                    st.write(f"- {a}")
 
-        if data.get("riesgos"):
-            st.markdown("⚠️ Riesgos")
-            for r in data["riesgos"]:
-                st.write(f"- {r}")
+                if data.get("riesgos"):
+                    st.markdown("⚠️ Riesgos")
+                    for r in data["riesgos"]:
+                        st.write(f"- {r}")
 
-    except Exception:
-        pass
+            except Exception as e:
+                st.error(f"Error al consultar IA: {e}")
 
 # ========================
 # UI
