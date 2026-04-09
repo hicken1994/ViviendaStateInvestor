@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.db import get_top_opportunities, simulate_market
+from utils.db import get_top_opportunities, simulate_market, get_recent_events
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
 
@@ -42,11 +42,10 @@ for col in profile_metrics.columns:
     df[col] = profile_metrics[col]
 
 # ========================
-# SCORING RADAR (ALINEADO CON PROPIEDAD)
+# SCORING RADAR
 # ========================
 
 def compute_radar_score(row):
-
     score = 0
 
     rent = row.get("rentabilidad_estimada", 0)
@@ -82,8 +81,6 @@ def compute_radar_score(row):
     return min(score, 100)
 
 df["score_radar"] = df.apply(compute_radar_score, axis=1)
-
-# ORDENAR POR SCORE TOTAL DEL PERFIL
 df = df.sort_values("score_total", ascending=False).reset_index(drop=True)
 
 # ========================
@@ -99,7 +96,34 @@ def get_label(score):
         return "⚠️ Débil"
 
 # ========================
-# HERO
+# 🏆 OPORTUNIDAD DEL DÍA (ARRIBA DE TODO)
+# ========================
+
+best = df.iloc[0]
+
+st.markdown("## 🏆 Oportunidad del Día")
+st.caption(tooltip_help("oportunidad_dia"))
+
+st.success(f"""
+🔥 MEJOR OPORTUNIDAD HOY
+
+{best['barrio']}
+💰 {int(best['precio_total']):,} €
+📊 Score: {round(best['score_total'], 1)}
+📈 Rentabilidad: {round(best.get('rentabilidad_estimada', 0), 1)}%
+
+👉 Si encaja contigo, revisa ahora
+👉 Este tipo de oportunidades no duran mucho
+""")
+
+if st.button("🔍 Ver oportunidad del día"):
+    st.session_state.selected_property = best.to_dict()
+    st.switch_page("pages/3_propiedad.py")
+
+st.divider()
+
+# ========================
+# HERO — TOP 3
 # ========================
 
 st.markdown("## 🔥 Mejores oportunidades ahora")
@@ -108,15 +132,14 @@ st.caption(tooltip_help("score_total"))
 top3 = df.head(3)
 
 for i, row in top3.iterrows():
-
     label = get_label(row["score_total"])
 
     st.markdown(f"""
 ### 🏆 {row['barrio']} — {label}
 
 💰 {int(row['precio_total']):,} €  
-📊 Score: {round(row['score_total'],1)}  
-📈 Rentabilidad: {round(row.get('rentabilidad_estimada',0),1)}%  
+📊 Score: {round(row['score_total'], 1)}  
+📈 Rentabilidad: {round(row.get('rentabilidad_estimada', 0), 1)}%  
 
 👉 **Acción: Analizar en detalle**
 """)
@@ -161,10 +184,44 @@ st.dataframe(display_df.head(20), use_container_width=True)
 st.divider()
 
 # ========================
-# 🔥 NUEVAS OPORTUNIDADES (FOMO)
+# 📡 EVENTOS DEL MERCADO
 # ========================
 
-st.markdown("## 🚨 Oportunidades detectadas")
+st.markdown("## 🚨 Eventos del mercado")
+st.caption("💡 Movimientos recientes detectados por la simulación: bajadas de precio, nuevas propiedades, mejoras de rentabilidad.")
+
+events = get_recent_events(10)
+
+if events.empty:
+    st.info("No se han detectado eventos recientes. Se generan al simular el mercado.")
+else:
+    for _, e in events.iterrows():
+        etype = e.get("event_type", "")
+        prop_id = e.get("property_id", "—")
+        old_val = e.get("old_value")
+        new_val = e.get("new_value")
+
+        if etype == "price_drop":
+            delta = f"de {int(old_val):,}€ a {int(new_val):,}€" if old_val and new_val else ""
+            st.error(f"💸 **Bajada de precio** — Propiedad {prop_id} {delta}")
+
+        elif etype == "new_listing":
+            st.success(f"🆕 **Nueva propiedad** detectada — {prop_id}")
+
+        elif etype == "yield_up":
+            delta = f"de {round(old_val, 2)}% a {round(new_val, 2)}%" if old_val and new_val else ""
+            st.info(f"📈 **Mejora de rentabilidad** — Propiedad {prop_id} {delta}")
+
+        else:
+            st.write(f"📌 Evento: {etype} — {prop_id}")
+
+st.divider()
+
+# ========================
+# 🔥 OPORTUNIDADES DETECTADAS (FOMO)
+# ========================
+
+st.markdown("## 🎯 Oportunidades detectadas")
 st.caption(tooltip_help("oportunidades_detectadas"))
 
 def is_opportunity(row):
@@ -176,7 +233,6 @@ def is_opportunity(row):
 opps = df[df.apply(is_opportunity, axis=1)].copy()
 
 if not opps.empty:
-
     opps = opps.sort_values("score_radar", ascending=False).head(5)
 
     for _, row in opps.iterrows():
@@ -185,8 +241,8 @@ if not opps.empty:
 
 📍 {row['barrio']}
 💰 {int(row['precio_total']):,} €
-📊 Score: {round(row['score_radar'],1)}
-📈 {round(row.get('rentabilidad_estimada',0),1)}%
+📊 Score: {round(row['score_radar'], 1)}
+📈 {round(row.get('rentabilidad_estimada', 0), 1)}%
 ⏱️ Lleva {int(row.get('dias', 0))} días en mercado
 
 👉 **Revisar ahora**
@@ -194,29 +250,8 @@ if not opps.empty:
         if st.button(f"Ver oportunidad {row['barrio']} {int(row['precio_total'])}"):
             st.session_state.selected_property = row.to_dict()
             st.switch_page("pages/3_propiedad.py")
-
 else:
     st.info("No hay oportunidades claras ahora con tu perfil actual. Prueba a cambiar de perfil en el sidebar.")
-
-# ========================
-# 🏆 OPORTUNIDAD DEL DÍA
-# ========================
-
-st.divider()
-st.markdown("## 🏆 Oportunidad del Día")
-st.caption(tooltip_help("oportunidad_dia"))
-
-best = df.iloc[0]
-
-st.success(f"""
-🔥 MEJOR OPORTUNIDAD HOY
-
-{best['barrio']}
-💰 {int(best['precio_total']):,} €
-
-👉 Si encaja contigo, revisa ahora
-👉 Este tipo de oportunidades no duran mucho
-""")
 
 # ========================
 # 📊 DETALLE SCORING (SOLO AVANZADO)

@@ -1,5 +1,6 @@
 import streamlit as st
 from utils.tooltips import tooltip_help
+from utils.db import get_recent_events
 from utils.profiles import get_perfil, get_recomendacion_perfil
 
 st.title("🏠 Análisis de propiedad")
@@ -22,7 +23,6 @@ if "selected_property" not in st.session_state:
     st.warning("No hay propiedad seleccionada")
     st.stop()
 
-# ✅ AHORA SÍ DEFINIMOS PROP BIEN
 prop = st.session_state.selected_property
 
 precio = prop.get("precio_total", 0)
@@ -30,11 +30,39 @@ metros = prop.get("metros", 0)
 precio_m2_barrio = prop.get("precio_m2_barrio", 0)
 
 # ========================
+# 📡 ACTIVIDAD RECIENTE DE ESTA PROPIEDAD
+# ========================
+
+prop_id = str(prop.get("id", prop.get("precio_total", "")))
+events = get_recent_events(50)
+
+if not events.empty:
+    prop_events = events[events["property_id"] == prop_id]
+
+    if not prop_events.empty:
+        with st.expander("🚨 Actividad reciente en esta propiedad", expanded=True):
+            for _, e in prop_events.iterrows():
+                etype = e.get("event_type", "")
+                old_val = e.get("old_value")
+                new_val = e.get("new_value")
+
+                if etype == "price_drop":
+                    delta = f"de {int(old_val):,}€ a {int(new_val):,}€" if old_val and new_val else ""
+                    st.error(f"💸 **Bajada de precio** {delta}")
+                elif etype == "yield_up":
+                    delta = f"de {round(old_val, 2)}% a {round(new_val, 2)}%" if old_val and new_val else ""
+                    st.info(f"📈 **Mejora de rentabilidad** {delta}")
+                elif etype == "new_listing":
+                    st.success("🆕 **Nueva propiedad** detectada")
+                else:
+                    st.write(f"📌 {etype}")
+
+# ========================
 # HEADER
 # ========================
 
 st.divider()
-st.subheader(prop.get("barrio"))
+st.subheader(f"📍 {prop.get('barrio', 'Sin barrio')}")
 
 col1, col2, col3 = st.columns(3)
 
@@ -69,20 +97,6 @@ r = interes / 12
 n = años * 12
 
 cuota = round(prestamo * (r * (1 + r)**n) / ((1 + r)**n - 1), 2)
-
-# ========================
-# DETECCIÓN MODO
-# ========================
-
-default_values = {"entrada": perfil["entrada_pct"] / 100, "interes": perfil["interes"] / 100, "años": perfil["años"]}
-
-is_advanced = (
-    abs(entrada_pct - default_values["entrada"]) > 0.01 or
-    abs(interes - default_values["interes"]) > 0.001 or
-    años != default_values["años"]
-)
-
-modo = "avanzado" if is_advanced else "simple"
 
 # ========================
 # ALQUILER
@@ -187,10 +201,10 @@ if perfil.get("mostrar_detalle_scoring"):
 # UX → SIGUIENTE PASO
 # ========================
 
+st.divider()
 st.info("👉 Puedes validar esta decisión con un análisis más profundo usando IA")
 
 if st.button("🔍 Validar con IA"):
-    # ✅ AQUÍ PASAMOS TODO AL COPILOT
     st.session_state.copilot_property = {
         **prop,
         "score_total": round(prop.get("score_total", 0), 2),
@@ -201,15 +215,15 @@ if st.button("🔍 Validar con IA"):
         "recomendacion_modelo": recomendacion,
         "perfil_inversion": perfil_nombre,
     }
-
     st.switch_page("pages/4_Analisis_Detallado.py")
 
 # ========================
 # MODO SIMPLE (PARA PERFIL BÁSICO)
 # ========================
 
-if modo == "simple" or perfil_nombre == "basico":
+if perfil_nombre == "basico":
 
+    st.divider()
     st.markdown(f"""
     💡 **Resumen claro:**
 
@@ -227,7 +241,7 @@ if modo == "simple" or perfil_nombre == "basico":
 
 if perfil.get("mostrar_escenarios"):
 
-    with st.expander("Ver análisis detallado"):
+    with st.expander("📊 Ver análisis detallado"):
 
         st.markdown("### 🧠 Estimación de alquiler")
         st.caption(tooltip_help("rentabilidad_real"))
@@ -244,9 +258,10 @@ if perfil.get("mostrar_escenarios"):
         st.markdown("### 📈 Escenarios")
 
         for nombre, val in [
-            ("Conservador", base_alquiler),
-            ("Esperado", alquiler),
-            ("Optimista", base_alquiler * 1.25)
+            ("🟢 Conservador", base_alquiler),
+            ("🟡 Esperado", alquiler),
+            ("🔵 Optimista", base_alquiler * 1.25)
         ]:
-            cf = val - cuota - (val * 0.15) - gastos_fijos
-            st.write(f"{nombre}: {val:.2f}€ → {cf:.2f}€/mes")
+            cf = round(val - cuota - (val * 0.15) - gastos_fijos, 2)
+            color = "success" if cf > 0 else "error"
+            getattr(st, color)(f"{nombre}: {val:.2f}€/mes → **{cf:.2f}€/mes** cashflow")

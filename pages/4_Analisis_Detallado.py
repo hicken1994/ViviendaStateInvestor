@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.db import get_top_opportunities, simulate_market
+from utils.db import get_top_opportunities, simulate_market, get_recent_events
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
 import json
@@ -69,36 +69,62 @@ if not df.empty:
     st.divider()
 
 # ========================
+# 📡 ACTIVIDAD RECIENTE DEL MERCADO
+# ========================
+
+with st.expander("🔥 Actividad reciente del mercado", expanded=False):
+    events = get_recent_events(10)
+
+    if events.empty:
+        st.info("No se han detectado eventos recientes.")
+    else:
+        for _, e in events.iterrows():
+            etype = e.get("event_type", "")
+            prop_id = e.get("property_id", "—")
+            old_val = e.get("old_value")
+            new_val = e.get("new_value")
+
+            if etype == "price_drop":
+                delta = f"de {int(old_val):,}€ a {int(new_val):,}€" if old_val and new_val else ""
+                st.error(f"💸 **Bajada de precio** — {prop_id} {delta}")
+            elif etype == "yield_up":
+                delta = f"de {round(old_val, 2)}% a {round(new_val, 2)}%" if old_val and new_val else ""
+                st.info(f"📈 **Mejora de rentabilidad** — {prop_id} {delta}")
+            elif etype == "new_listing":
+                st.success(f"🆕 **Nueva propiedad** — {prop_id}")
+            else:
+                st.write(f"📌 {etype} — {prop_id}")
+
+st.divider()
+
+# ========================
 # 🏠 HEADER PROPIEDAD
 # ========================
 
 if mode == "Propiedad":
 
     if not prop:
-        st.warning("Selecciona una propiedad primero")
+        st.warning("Selecciona una propiedad primero desde el Radar o el Mapa.")
         st.stop()
 
-    st.markdown("## 🏠 Propiedad")
+    st.markdown("## 🏠 Propiedad seleccionada")
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("Precio", f"{int(prop.get('precio_total',0)):,} €", help=tooltip_help("precio_total"))
-    col2.metric("Cashflow", f"{int(prop.get('cashflow',0))} €/mes", help=tooltip_help("cashflow"))
+    col1.metric("Precio", f"{int(prop.get('precio_total', 0)):,} €", help=tooltip_help("precio_total"))
+    col2.metric("Cashflow", f"{int(prop.get('cashflow', 0))} €/mes", help=tooltip_help("cashflow"))
     col3.metric("Score", round(prop.get("score_total", 0), 2), help=tooltip_help("score_total"))
 
-    st.caption(prop.get("barrio"))
+    st.caption(f"📍 {prop.get('barrio', 'Sin barrio')}")
 
 # ========================
-# 🧠 DEAL FINDER (CLAVE)
+# 🧠 DEAL FINDER
 # ========================
 
 def get_top_deals():
-
-    df_sorted = df.sort_values("score_total", ascending=False)
-
-    return df_sorted.head(5)
+    return df.sort_values("score_total", ascending=False).head(5)
 
 # ========================
-# 💰 PRECIO OBJETIVO SIMPLE
+# 💰 PRECIO OBJETIVO
 # ========================
 
 def estimate_target_price(row):
@@ -106,14 +132,14 @@ def estimate_target_price(row):
     descuento = row.get("descuento", 0)
 
     if descuento > 10:
-        return int(precio * 0.9)
+        return int(precio * 0.90)
     elif descuento > 5:
         return int(precio * 0.95)
     else:
         return int(precio * 0.97)
 
 # ========================
-# 🟢 MODO MERCADO (IMPRESCINDIBLE)
+# 🟢 MODO MERCADO
 # ========================
 
 def run_market():
@@ -122,41 +148,36 @@ def run_market():
     st.caption(tooltip_help("oportunidades_detectadas"))
 
     deals = get_top_deals()
-
     best_deal = deals.iloc[0]
 
     st.success(f"""
 👉 MEJOR OPORTUNIDAD:
 
-{best_deal['barrio']}  
-💰 {int(best_deal['precio_total']):,} €  
-📊 Score: {round(best_deal['score_total'],1)}
+{best_deal['barrio']}
+💰 {int(best_deal['precio_total']):,} €
+📊 Score: {round(best_deal['score_total'], 1)}
 
 💸 Oferta recomendada: {estimate_target_price(best_deal):,} €
 """)
 
     st.markdown("## 📊 Top oportunidades")
 
-    for _, row in deals.iterrows():
-
+    for idx, (_, row) in enumerate(deals.iterrows()):
         target = estimate_target_price(row)
 
         st.markdown(f"""
 ### {row['barrio']}
-💰 {int(row['precio_total']):,} €  
-📊 Score: {round(row['score_total'],1)}  
+💰 {int(row['precio_total']):,} €
+📊 Score: {round(row['score_total'], 1)}
 
 👉 Ofertar: {target:,} €
 """)
 
-        if st.button(f"Analizar {row['barrio']} {int(row['precio_total'])}"):
+        if st.button(f"Analizar {row['barrio']} {int(row['precio_total'])}", key=f"market_{idx}"):
             st.session_state.selected_property = row.to_dict()
             st.switch_page("pages/3_propiedad.py")
 
-    # ========================
-    # DETALLE SCORING (SOLO AVANZADO)
-    # ========================
-
+    # Detalle scoring (solo avanzado)
     if perfil.get("mostrar_detalle_scoring"):
         st.divider()
         st.markdown("### 🧪 Detalle del scoring de mercado")
@@ -174,7 +195,7 @@ def run_market():
         st.dataframe(scoring_df, use_container_width=True)
 
 # ========================
-# 🟡 MODO PROPIEDAD (DECISOR)
+# 🟡 MODO PROPIEDAD
 # ========================
 
 def run_property():
@@ -194,7 +215,6 @@ def run_property():
 
     st.markdown("### 🎯 Acción inmediata")
 
-    # Umbrales adaptados al perfil
     if score > perfil["min_score"] + 20:
         st.success(f"👉 Comprar o lanzar oferta inmediata — {perfil['consejo_compra']}")
     elif score > perfil["min_score"]:
@@ -202,10 +222,7 @@ def run_property():
     else:
         st.error(f"👉 No entrar en esta operación — {perfil['consejo_descartar']}")
 
-    # ========================
-    # 📊 DETALLE SCORING PROPIEDAD (SOLO AVANZADO)
-    # ========================
-
+    # Detalle scoring (solo avanzado)
     if perfil.get("mostrar_detalle_scoring"):
         st.divider()
         st.markdown("### 🧪 Desglose del scoring")
@@ -227,9 +244,17 @@ def run_property():
     # IA SOLO PARA MEJORA
     # ========================
 
+    st.divider()
+    st.markdown("### 🤖 Análisis con IA")
+    st.caption("Genera una estrategia de compra personalizada usando inteligencia artificial.")
+
     if st.button("🤖 Generar análisis con IA"):
 
-        api_key = st.secrets.get("OPENAI_API_KEY", None) if hasattr(st, "secrets") else None
+        api_key = None
+        try:
+            api_key = st.secrets.get("OPENAI_API_KEY")
+        except Exception:
+            pass
 
         if not api_key:
             import os
@@ -266,7 +291,7 @@ Devuelve JSON:
                     )
 
                 txt = res.choices[0].message.content
-                js = txt[txt.index("{"):txt.rindex("}")+1]
+                js = txt[txt.index("{"):txt.rindex("}") + 1]
                 data = json.loads(js)
 
                 st.markdown("### 🤖 Optimización IA")
@@ -275,13 +300,15 @@ Devuelve JSON:
                     st.success(f"💸 Precio objetivo IA: {int(data['precio_objetivo']):,} €")
                     st.caption(tooltip_help("precio_objetivo"))
 
-                for a in data.get("acciones", []):
-                    st.write(f"- {a}")
+                if data.get("acciones"):
+                    st.markdown("**📋 Acciones recomendadas:**")
+                    for a in data["acciones"]:
+                        st.write(f"✅ {a}")
 
                 if data.get("riesgos"):
-                    st.markdown("⚠️ Riesgos")
+                    st.markdown("**⚠️ Riesgos identificados:**")
                     for r in data["riesgos"]:
-                        st.write(f"- {r}")
+                        st.write(f"🔸 {r}")
 
             except Exception as e:
                 st.error(f"Error al consultar IA: {e}")
