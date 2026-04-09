@@ -4,7 +4,7 @@ import unicodedata
 import pydeck as pdk
 import numpy as np
 
-from utils.db import get_top_opportunities, get_connection
+from utils.db import get_top_opportunities, get_connection, add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil
 
@@ -56,6 +56,14 @@ mapping_df = pd.read_sql(
     "SELECT * FROM distrito_mapping",
     conn
 )
+
+conn.close()
+
+# ========================
+# IMÁGENES
+# ========================
+
+df = add_images(df)
 
 # ========================
 # NORMALIZAR (CLAVE)
@@ -308,7 +316,10 @@ selected_index = st.selectbox(
 )
 
 if st.button("🔍 Ver propiedad"):
-    st.session_state.selected_property = map_plot.loc[selected_index].to_dict()
+    selected_row = map_plot.loc[selected_index]
+    if selected_row.get("image_url"):
+        st.image(selected_row["image_url"], use_container_width=True)
+    st.session_state.selected_property = selected_row.to_dict()
     st.switch_page("pages/3_propiedad.py")
 
 # ========================

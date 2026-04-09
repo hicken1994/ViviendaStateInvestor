@@ -3,6 +3,7 @@ from utils.tooltips import tooltip_help
 from utils.db import get_recent_events
 from utils.profiles import get_perfil, get_recomendacion_perfil
 
+
 st.title("🏠 Análisis de propiedad")
 st.caption("💡 Aquí se analiza en detalle si una propiedad es buena inversión para ti.")
 
@@ -24,6 +25,9 @@ if "selected_property" not in st.session_state:
     st.stop()
 
 prop = st.session_state.selected_property
+
+if prop.get("image_url"):
+    st.image(prop["image_url"], use_container_width=True)
 
 precio = prop.get("precio_total", 0)
 metros = prop.get("metros", 0)

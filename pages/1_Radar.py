@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.db import get_top_opportunities, simulate_market, get_recent_events
+from utils.db import get_top_opportunities, simulate_market, get_recent_events, add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
 
@@ -26,6 +26,7 @@ if df.empty:
     st.stop()
 
 df = simulate_market(df)  # 🔥 ACTIVAR
+df = add_images(df)
 
 # ========================
 # SCORING CON PERFIL
@@ -104,6 +105,9 @@ best = df.iloc[0]
 st.markdown("## 🏆 Oportunidad del Día")
 st.caption(tooltip_help("oportunidad_dia"))
 
+if best.get("image_url"):
+    st.image(best["image_url"], use_container_width=True)
+
 st.success(f"""
 🔥 MEJOR OPORTUNIDAD HOY
 
@@ -133,6 +137,9 @@ top3 = df.head(3)
 
 for i, row in top3.iterrows():
     label = get_label(row["score_total"])
+
+    if row.get("image_url"):
+        st.image(row["image_url"], use_container_width=True)
 
     st.markdown(f"""
 ### 🏆 {row['barrio']} — {label}

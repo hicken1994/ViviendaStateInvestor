@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.db import get_top_opportunities, simulate_market, get_recent_events
+from utils.db import get_top_opportunities, simulate_market, get_recent_events, add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
 import json
@@ -30,6 +30,7 @@ prop = st.session_state.get("copilot_property")
 
 df = get_top_opportunities(300)
 df = simulate_market(df)  # 🔥 ACTIVAR
+df = add_images(df)
 
 # ========================
 # SCORING CON PERFIL (IGUAL QUE RADAR)
@@ -50,6 +51,9 @@ for col in profile_metrics.columns:
 
 if not df.empty:
     best = df.sort_values("score_total", ascending=False).iloc[0]
+
+    if best.get("image_url"):
+        st.image(best["image_url"], use_container_width=True)
 
     st.markdown("## 🏆 Oportunidad del Día")
     st.caption(tooltip_help("oportunidad_dia"))
