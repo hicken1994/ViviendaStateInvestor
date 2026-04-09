@@ -1,8 +1,22 @@
-def save_snapshot(df):
-    ensure_history_table()
+import sqlite3
+from datetime import datetime
 
-    conn = get_connection()
+DB_PATH = "real_estate.db"
+
+
+def save_snapshot(df):
+    conn = sqlite3.connect(DB_PATH)
     try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS property_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                property_id TEXT,
+                precio_total REAL,
+                rentabilidad REAL,
+                fecha TIMESTAMP
+            )
+        """)
+
         cursor = conn.cursor()
 
         for _, row in df.iterrows():

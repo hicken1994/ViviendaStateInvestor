@@ -1,8 +1,11 @@
-from utils.db import get_connection
+import sqlite3
+
+DB_PATH = "real_estate.db"
+
 
 def detect_events(df):
 
-    conn = get_connection()
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     events = []
