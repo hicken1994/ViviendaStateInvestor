@@ -1,5 +1,6 @@
 import streamlit as st
-from utils.db import get_top_opportunities, simulate_market, get_recent_events, add_images
+from utils.db import get_top_opportunities, simulate_market, get_recent_events
+from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
 import json

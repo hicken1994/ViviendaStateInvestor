@@ -4,7 +4,8 @@ import unicodedata
 import pydeck as pdk
 import numpy as np
 
-from utils.db import get_top_opportunities, get_connection, add_images
+from utils.db import get_top_opportunities, get_connection
+from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil
 
