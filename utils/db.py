@@ -262,3 +262,33 @@ def simulate_market(df):
             pass
 
     return df
+
+
+# ========================
+# 🛠️ ACTUALIZACIÓN DE ESQUEMA
+# ========================
+
+def add_is_premium_column():
+    conn = sqlite3.connect("real_estate.db")
+    cursor = conn.cursor()
+
+    # Add the 'is_premium' column if it doesn't exist
+    cursor.execute("""
+    ALTER TABLE oportunidades
+    ADD COLUMN is_premium BOOLEAN DEFAULT 0
+    """)
+
+    # Update the 'is_premium' column based on a condition
+    cursor.execute("""
+    UPDATE oportunidades
+    SET is_premium = CASE
+        WHEN score_total >= 80 THEN 1
+        ELSE 0
+    END
+    """)
+
+    conn.commit()
+    conn.close()
+
+# Call the function to ensure the column is added and updated
+add_is_premium_column()
