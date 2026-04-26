@@ -356,3 +356,12 @@ if not premium_df.empty:
         st.markdown("---")
 else:
     st.write("No hay propiedades premium disponibles con los filtros actuales.")
+
+# ========================
+# CALCULAR PROPIEDADES PREMIUM
+# ========================
+
+def calculate_is_premium(row):
+    return row.get("score_total", 0) > 80  # Umbral para propiedades premium
+
+df["is_premium"] = df.apply(calculate_is_premium, axis=1)

@@ -339,3 +339,18 @@ if mode == "Mercado":
     run_market()
 else:
     run_property()
+
+# Example usage of Plotly for visualization
+if not df.empty:
+    fig = px.scatter(
+        df,
+        x="precio_total",
+        y="score_total",
+        color="rentabilidad_estimada",
+        size="dias",
+        hover_name="barrio",
+        title="Análisis Detallado de Propiedades"
+    )
+    st.plotly_chart(fig)
+else:
+    st.warning("No hay datos disponibles para el análisis detallado.")
