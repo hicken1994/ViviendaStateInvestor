@@ -25,9 +25,9 @@ def get_top_opportunities(limit=50):
     conn = get_connection()
     try:
         df = pd.read_sql("""
-            SELECT *
-            FROM vista_oportunidades_ai
-            ORDER BY opportunity_score DESC
+            SELECT id, name, price, location, image_url
+            FROM opportunities
+            ORDER BY score DESC
             LIMIT ?
         """, conn, params=(limit,))
     finally:

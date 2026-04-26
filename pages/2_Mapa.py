@@ -334,3 +334,25 @@ for _, zone in top_zones.iterrows():
     st.markdown(f"""
 {badge} **{zone['barrio']}** — Score medio: **{score}** · {int(zone['num_properties'])} propiedades · Precio medio: {int(zone['precio_mean']):,}€
 """)
+
+# ========================
+# PREMIUM CARDS
+# ========================
+
+st.divider()
+st.markdown("## 🌟 Propiedades Premium")
+
+premium_df = df[df["is_premium"] == True]
+
+if not premium_df.empty:
+    for _, opp in premium_df.iterrows():
+        st.markdown(f"### 🌟 **{opp['barrio']}** 🌟")
+        if opp['image_url']:
+            st.image(opp['image_url'], use_column_width=True)
+        st.write(f"💰 Precio: **{int(opp['precio_total']):,} €**")
+        st.write(f"📊 Score: **{opp['score_total']}**")
+        st.write(f"📈 Rentabilidad estimada: **{opp['rentabilidad_estimada']}%**")
+        st.write("🔔 **¡Propiedad exclusiva!** Actúa rápido antes de que sea tarde.")
+        st.markdown("---")
+else:
+    st.write("No hay propiedades premium disponibles con los filtros actuales.")

@@ -262,3 +262,16 @@ if perfil.get("mostrar_detalle_scoring"):
             scoring_df[col] = scoring_df[col].round(2)
 
         st.dataframe(scoring_df, use_container_width=True)
+
+# ========================
+# 🔍 RENDER IMÁGENES EN PÁGINA DE RADAR
+# ========================
+
+def render_radar(opportunities):
+    for opp in opportunities:
+        st.image(opp['image_url'], caption=f"{opp['name']} - ${opp['price']}")
+        st.write(f"Ubicación: {opp['location']}")
+
+# Fetch opportunities and render them
+opportunities = df.to_dict(orient="records")
+render_radar(opportunities)
