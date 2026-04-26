@@ -272,11 +272,12 @@ def add_is_premium_column():
     conn = sqlite3.connect("real_estate.db")
     cursor = conn.cursor()
 
-    # Add the 'is_premium' column if it doesn't exist
-    cursor.execute("""
-    ALTER TABLE oportunidades
-    ADD COLUMN is_premium BOOLEAN DEFAULT 0
-    """)
+    # Check if the column already exists
+    cursor.execute("PRAGMA table_info(oportunidades)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if "is_premium" not in columns:
+        # Add the 'is_premium' column without a default value
+        cursor.execute("ALTER TABLE oportunidades ADD COLUMN is_premium BOOLEAN")
 
     # Update the 'is_premium' column based on a condition
     cursor.execute("""
