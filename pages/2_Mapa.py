@@ -342,6 +342,14 @@ for _, zone in top_zones.iterrows():
 st.divider()
 st.markdown("## 🌟 Propiedades Premium")
 
+# ========================
+# VALIDAR COLUMNA 'is_premium'
+# ========================
+
+if "is_premium" not in df.columns:
+    st.error("La columna 'is_premium' no existe en el DataFrame. Verifica el cálculo previo.")
+    st.stop()
+
 premium_df = df[df["is_premium"] == True]
 
 if not premium_df.empty:
