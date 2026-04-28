@@ -1,5 +1,10 @@
 import streamlit as st
 from utils.profiles import get_perfil
+from utils.db import add_is_premium_column
+
+# ========================
+# ⚙️ CONFIGURACIÓN GENERAL
+# ========================
 
 st.set_page_config(
     page_title="Vivienda AI — Madrid Investment Intelligence",
@@ -9,12 +14,21 @@ st.set_page_config(
 )
 
 # ========================
-# 🎨 CSS PREMIUM
+# 🛠️ INICIALIZACIÓN DB (UNA SOLA VEZ)
+# ========================
+
+if "db_initialized" not in st.session_state:
+    add_is_premium_column()
+    st.session_state["db_initialized"] = True
+
+# ========================
+# 🎨 CSS PREMIUM (CORREGIDO)
 # ========================
 
 st.markdown("""
 <style>
     .block-container { padding-top: 1rem; }
+
     div[data-testid="stMetric"] {
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         padding: 1rem;
@@ -22,14 +36,25 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.08);
         color: white;
     }
-    div[data-testid="stMetric"] label { color: rgba(255,255,255,0.7) !important; }
-    div[data-testid="stMetric"] [data-testid="stMetricValue"] { color: white !important; }
+
+    div[data-testid="stMetric"] label {
+        color: rgba(255,255,255,0.7) !important;
+    }
+
+    div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+        color: white !important;
+    }
+
     .stButton > button {
         border-radius: 8px;
         font-weight: 600;
         transition: all 0.2s;
     }
-    .stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -72,16 +97,15 @@ st.sidebar.markdown("---")
 st.markdown("# 🏠 Vivienda AI")
 st.markdown("#### Inteligencia artificial aplicada a la inversión inmobiliaria en Madrid")
 
-st.markdown("")
-
 col_hero1, col_hero2 = st.columns([2, 1])
 
 with col_hero1:
     st.markdown(f"""
 > **Perfil activo:** {perfil['nombre']} — _{perfil['descripcion']}_
 
-Analiza **+3.000 propiedades** en tiempo real. El sistema detecta oportunidades,
-calcula rentabilidad y te dice si comprar, negociar o descartar — adaptado a tu perfil.
+Analiza **+3.000 propiedades** en tiempo real.  
+El sistema detecta oportunidades, calcula rentabilidad  
+y te dice si **comprar, negociar o descartar**, adaptado a tu perfil.
 """)
 
 with col_hero2:
@@ -101,25 +125,25 @@ col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.markdown("#### 📡 Radar")
-    st.caption("Detecta las mejores oportunidades del mercado en tiempo real. Score, rentabilidad y decisión automática.")
+    st.caption("Detecta las mejores oportunidades del mercado en tiempo real.")
     if st.button("Abrir Radar", use_container_width=True, type="primary"):
         st.switch_page("pages/1_Radar.py")
 
 with col2:
     st.markdown("#### 🗺️ Mapa")
-    st.caption("Visualiza oportunidades por zona. Filtra por score, compara barrios y selecciona desde el mapa.")
+    st.caption("Visualiza oportunidades por zona y compara barrios.")
     if st.button("Abrir Mapa", use_container_width=True):
         st.switch_page("pages/2_Mapa.py")
 
 with col3:
     st.markdown("#### 🏠 Propiedad")
-    st.caption("Simulación completa: hipoteca, cashflow, break-even, margen y decisión adaptada a tu perfil.")
+    st.caption("Simulación completa de inversión inmobiliaria.")
     if st.button("Abrir Propiedad", use_container_width=True):
         st.switch_page("pages/3_propiedad.py")
 
 with col4:
     st.markdown("#### 🤖 AI Copilot")
-    st.caption("Tu asistente inteligente. Analiza propiedades con IA y recibe estrategias de compra personalizadas.")
+    st.caption("Análisis inteligente y estrategias de compra.")
     if st.button("Abrir Copilot", use_container_width=True):
         st.switch_page("pages/4_Analisis_Detallado.py")
 
@@ -148,7 +172,7 @@ with col_p2:
     - Cashflow mínimo: 100€/mes
     - Margen mínimo: 15%
     - Precio máximo: 400K€
-    - Ya has invertido antes
+    - Perfil equilibrado
     """)
 
 with col_p3:
@@ -160,4 +184,7 @@ with col_p3:
     - Inversor experimentado
     """)
 
-st.caption("Cambia tu perfil en el sidebar izquierdo → se ajustan umbrales, métricas y recomendaciones en toda la app.")
+st.caption(
+    "Cambia tu perfil en el sidebar izquierdo → "
+    "se ajustan métricas y recomendaciones en toda la app."
+)
