@@ -1,6 +1,7 @@
 import streamlit as st
+import pandas as pd
 import plotly.express as px
-from utils.db import get_top_opportunities, simulate_market, get_recent_events, get_connection
+from utils.db import get_top_opportunities, simulate_market, get_recent_events
 from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
@@ -31,7 +32,25 @@ if st.button("🧹 Limpiar contexto"):
 prop = st.session_state.get("copilot_property")
 
 df = get_top_opportunities(300)
-df = simulate_market(df)  # 🔥 ACTIVAR
+
+# ========================
+# 📊 SIMULACIÓN DE MERCADO (OPCIONAL)
+# ========================
+
+col_sim, _ = st.columns([1, 5])
+with col_sim:
+    if st.button("📊 Simular cambios de mercado", key="sim_copilot", use_container_width=True):
+        df_sim = simulate_market(df.copy())
+        st.session_state["copilot_simulated"] = df_sim.to_dict("records")
+        st.rerun()
+
+if "copilot_simulated" in st.session_state:
+    df = pd.DataFrame(st.session_state["copilot_simulated"])
+    st.info("📊 Simulación activa — los precios reflejan cambios simulados del mercado.")
+    if st.button("🔄 Resetear datos", key="reset_copilot", use_container_width=True):
+        st.session_state.pop("copilot_simulated", None)
+        st.rerun()
+
 df = add_images(df)
 
 # ========================
@@ -318,18 +337,6 @@ Devuelve JSON:
 
             except Exception as e:
                 st.error(f"Error al consultar IA: {e}")
-
-# ========================
-# DETALLE ANALISIS
-# ========================
-
-def render_detailed_analysis(data):
-    fig = px.bar(data, x='category', y='value', title='Análisis Detallado')
-    st.plotly_chart(fig)
-
-connection = get_connection()
-data = get_top_opportunities(connection)
-render_detailed_analysis(data)
 
 # ========================
 # UI

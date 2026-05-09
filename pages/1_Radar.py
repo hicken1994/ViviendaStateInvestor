@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from utils.db import get_top_opportunities, simulate_market, get_recent_events
 from utils.images import add_images
 from utils.tooltips import tooltip_help
@@ -31,7 +32,24 @@ if df.empty:
     st.warning("No hay datos disponibles")
     st.stop()
 
-df = simulate_market(df)
+# ========================
+# 📊 SIMULACIÓN DE MERCADO (OPCIONAL)
+# ========================
+
+col_sim, _ = st.columns([1, 5])
+with col_sim:
+    if st.button("📊 Simular cambios de mercado", key="sim_radar", use_container_width=True):
+        df_sim = simulate_market(df.copy())
+        st.session_state["radar_simulated"] = df_sim.to_dict("records")
+        st.rerun()
+
+if "radar_simulated" in st.session_state:
+    df = pd.DataFrame(st.session_state["radar_simulated"])
+    st.info("📊 Simulación activa — los precios reflejan cambios simulados del mercado.")
+    if st.button("🔄 Resetear datos", key="reset_radar", use_container_width=True):
+        st.session_state.pop("radar_simulated", None)
+        st.rerun()
+
 df = add_images(df)
 
 # ========================
@@ -263,15 +281,4 @@ if perfil.get("mostrar_detalle_scoring"):
 
         st.dataframe(scoring_df, use_container_width=True)
 
-# ========================
-# 🔍 RENDER IMÁGENES EN PÁGINA DE RADAR
-# ========================
 
-def render_radar(opportunities):
-    for opp in opportunities:
-        st.image(opp['image_url'], caption=f"{opp['name']} - ${opp['price']}")
-        st.write(f"Ubicación: {opp['location']}")
-
-# Fetch opportunities and render them
-opportunities = df.to_dict(orient="records")
-render_radar(opportunities)
