@@ -55,6 +55,20 @@ st.markdown("""
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
+
+    /* Imágenes de propiedades: tamaño uniforme */
+    div[data-testid="stImage"] img {
+        max-height: 200px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Página de detalle: imagen más grande */
+    .stApp [data-testid="stImage"]:only-child img {
+        max-height: 320px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
