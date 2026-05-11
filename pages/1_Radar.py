@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
-from utils.db import get_top_opportunities, simulate_market, get_recent_events
+from utils.db import get_top_opportunities, simulate_market, get_recent_events, get_barrio_avg_scores
 from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
+from utils.charts import create_radar_chart, create_comparison_radar
 
 
 # ========================
@@ -12,6 +13,9 @@ from utils.profiles import get_perfil, compute_score_with_profile
 
 perfil_nombre = st.session_state.get("perfil_inversion", "intermedio")
 perfil = get_perfil(perfil_nombre)
+
+if "selected_for_compare" not in st.session_state:
+    st.session_state.selected_for_compare = []
 
 
 # ========================
@@ -140,6 +144,56 @@ with col_info:
         st.session_state.selected_property = best.to_dict()
         st.switch_page("pages/3_propiedad.py")
 
+    # Acciones: comparar + vigilar
+    act_col1, act_col2 = st.columns(2)
+    with act_col1:
+        cmp_key_best = f"cmp_best"
+        checked_best = st.checkbox(
+            "➕ Comparar", key=cmp_key_best,
+            value="best" in st.session_state.get("selected_for_compare", []),
+        )
+        if checked_best and "best" not in st.session_state.selected_for_compare:
+            st.session_state.selected_for_compare.append("best")
+            st.rerun()
+        elif not checked_best and "best" in st.session_state.selected_for_compare:
+            st.session_state.selected_for_compare.remove("best")
+            st.rerun()
+
+    with act_col2:
+        best_id = str(best.get("propiedad_id", ""))
+        wl = st.session_state.get("watchlist", {"propiedades": [], "barrios": []})
+        is_watched = best_id in [str(p) for p in wl.get("propiedades", [])]
+        if st.button(
+            "✅ Vigilada" if is_watched else "👁️ Vigilar",
+            key="watch_best",
+            use_container_width=True,
+        ):
+            if is_watched:
+                wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != best_id]
+            else:
+                wl["propiedades"].append(best_id)
+            st.session_state.watchlist = wl
+            st.rerun()
+
+# --- Radar chart: perfil de la mejor puntuada vs barrio ---
+barrio_nombre = best.get("barrio", "")
+if barrio_nombre:
+    barrio_avg = get_barrio_avg_scores(barrio_nombre, perfil)
+    if barrio_avg:
+        with st.expander("📡 Perfil de scores vs. barrio", expanded=False):
+            fig = create_radar_chart(
+                property_scores=best.to_dict(),
+                barrio_avg=barrio_avg,
+                property_name=f"📍 {best['barrio']}",
+                barrio_name=f"🏙️ Promedio {barrio_nombre}",
+                height=350,
+            )
+            st.plotly_chart(fig, use_container_width=True, key="radar_best")
+            st.caption(
+                "Comparación del perfil de puntuación de esta propiedad "
+                "vs. el promedio del barrio. Cada eje es una dimensión de inversión."
+            )
+
 st.divider()
 
 
@@ -195,7 +249,68 @@ for idx in range(0, len(top5), 3):
                     st.session_state.selected_property = row.to_dict()
                     st.switch_page("pages/3_propiedad.py")
 
+                # Acciones: comparar + vigilar
+                r_name = str(row.name)
+                act_c1, act_c2 = st.columns(2)
+                with act_c1:
+                    cmp_key = f"cmp_{r_name}"
+                    checked = st.checkbox(
+                        "➕", key=cmp_key,
+                        value=r_name in st.session_state.get("selected_for_compare", []),
+                        help="Agregar a comparación",
+                    )
+                    if checked and r_name not in st.session_state.selected_for_compare:
+                        st.session_state.selected_for_compare.append(r_name)
+                        st.rerun()
+                    elif not checked and r_name in st.session_state.selected_for_compare:
+                        st.session_state.selected_for_compare.remove(r_name)
+                        st.rerun()
+
+                with act_c2:
+                    row_id = str(row.get("propiedad_id", ""))
+                    wl = st.session_state.get("watchlist", {"propiedades": [], "barrios": []})
+                    is_watched = row_id in [str(p) for p in wl.get("propiedades", [])]
+                    if st.button(
+                        "✅" if is_watched else "👁️",
+                        key=f"watch_{r_name}",
+                        use_container_width=True,
+                        help="Quitar de vigiladas" if is_watched else "Vigilar propiedad",
+                    ):
+                        if is_watched:
+                            wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != row_id]
+                        else:
+                            wl["propiedades"].append(row_id)
+                        st.session_state.watchlist = wl
+                        st.rerun()
+
 st.divider()
+
+# --- Botón de comparación ---
+if len(st.session_state.get("selected_for_compare", [])) >= 2:
+    cols_btn = st.columns([1, 1, 1])
+    with cols_btn[1]:
+        if st.button(
+            f"🔄 Comparar {len(st.session_state.selected_for_compare)} seleccionadas",
+            type="primary", use_container_width=True, key="cmp_grid_btn",
+        ):
+            selected_props = []
+            prop_names = []
+            for item in st.session_state.selected_for_compare:
+                if item == "best":
+                    selected_props.append(best.to_dict())
+                    prop_names.append(f"📍 {best['barrio']}")
+                else:
+                    try:
+                        idx = int(item)
+                        row = df.loc[idx]
+                        selected_props.append(row.to_dict())
+                        prop_names.append(f"📍 {row['barrio']}")
+                    except (ValueError, KeyError):
+                        continue
+
+            st.session_state["compare_properties"] = selected_props
+            st.session_state["compare_names"] = prop_names
+            st.switch_page("pages/5_Comparador.py")
 
 
 # ========================
@@ -276,3 +391,20 @@ if perfil.get("mostrar_detalle_scoring"):
             scoring_df[col] = scoring_df[col].round(2)
 
         st.dataframe(scoring_df, use_container_width=True)
+
+        st.markdown("##### 📡 Perfil visual — Top 3")
+        top3 = df.head(3)
+        rad_cols = st.columns(3)
+        for i, (_, row) in enumerate(top3.iterrows()):
+            barrio_name = row.get("barrio", "")
+            b_avg = get_barrio_avg_scores(barrio_name, perfil) if barrio_name else {}
+            if b_avg:
+                with rad_cols[i]:
+                    fig = create_radar_chart(
+                        property_scores=row.to_dict(),
+                        barrio_avg=b_avg,
+                        property_name=barrio_name,
+                        barrio_name=f"Promedio {barrio_name}",
+                        height=280,
+                    )
+                    st.plotly_chart(fig, use_container_width=True, key=f"radar_top3_{i}")

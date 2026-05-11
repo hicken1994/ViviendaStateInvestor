@@ -1,7 +1,9 @@
 import streamlit as st
+import pandas as pd
 from utils.tooltips import tooltip_help
-from utils.db import get_recent_events
+from utils.db import get_recent_events, get_barrio_avg_scores
 from utils.profiles import get_perfil, get_recomendacion_perfil
+from utils.charts import create_radar_chart
 
 
 st.title("🏠 Análisis de propiedad")
@@ -66,7 +68,26 @@ if not events.empty:
 # ========================
 
 st.divider()
-st.subheader(f"📍 {prop.get('barrio', 'Sin barrio')}")
+
+# Watch button + header
+nav_col1, nav_col2 = st.columns([3, 1])
+with nav_col1:
+    st.subheader(f"📍 {prop.get('barrio', 'Sin barrio')}")
+with nav_col2:
+    prop_id = str(prop.get("propiedad_id", ""))
+    wl = st.session_state.get("watchlist", {"propiedades": [], "barrios": []})
+    is_watched = prop_id in [str(p) for p in wl.get("propiedades", [])]
+    if st.button(
+        "✅ Vigilada" if is_watched else "👁️ Vigilar propiedad",
+        key="watch_detail",
+        use_container_width=True,
+    ):
+        if is_watched:
+            wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != prop_id]
+        else:
+            wl["propiedades"].append(prop_id)
+        st.session_state.watchlist = wl
+        st.rerun()
 
 col1, col2, col3 = st.columns(3)
 
@@ -200,6 +221,20 @@ if perfil.get("mostrar_detalle_scoring"):
     for idx, (key, label) in enumerate(score_cols.items()):
         val = prop.get(key, 0)
         cols[idx].metric(label, round(val, 2) if val else 0, help=tooltip_help(key))
+
+    # --- Radar chart: perfil de scores vs barrio ---
+    barrio_nombre = prop.get("barrio", "")
+    if barrio_nombre:
+        barrio_avg = get_barrio_avg_scores(barrio_nombre, perfil)
+        if barrio_avg:
+            fig = create_radar_chart(
+                property_scores=prop,
+                barrio_avg=barrio_avg,
+                property_name=f"📍 {prop.get('barrio', '')}",
+                barrio_name=f"🏙️ Promedio {barrio_nombre}",
+                height=380,
+            )
+            st.plotly_chart(fig, use_container_width=True, key="radar_detalle")
 
 # ========================
 # UX → SIGUIENTE PASO

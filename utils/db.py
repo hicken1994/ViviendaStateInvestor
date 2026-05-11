@@ -209,6 +209,53 @@ def get_recent_events(limit=20):
 
 
 # ========================
+# 📊 PROMEDIO POR BARRIO (para gráficos radar)
+# ========================
+
+
+def get_barrio_avg_scores(barrio: str, perfil: dict) -> dict:
+    """Promedio de scores con perfil para propiedades de un barrio.
+
+    Args:
+        barrio: Nombre del barrio a consultar.
+        perfil: Dict de perfil (get_perfil).
+
+    Returns:
+        Dict con score_total, score_descuento, score_precio,
+        score_liquidez, score_tamano, score_ruido promediados.
+    """
+    from utils.profiles import compute_score_with_profile
+
+    conn = get_connection()
+    try:
+        df = pd.read_sql("""
+            SELECT *
+            FROM vista_oportunidades_ai
+            WHERE barrio = ?
+        """, conn, params=(barrio,))
+    finally:
+        conn.close()
+
+    if df.empty:
+        return {}
+
+    profile_metrics = df.apply(
+        lambda row: compute_score_with_profile(row, perfil),
+        axis=1,
+        result_type="expand",
+    )
+
+    score_cols = [
+        "score_total", "score_descuento", "score_precio",
+        "score_liquidez", "score_tamano", "score_ruido",
+    ]
+    available = [c for c in score_cols if c in profile_metrics.columns]
+
+    averages = profile_metrics[available].mean().to_dict()
+    return {k: round(v, 2) for k, v in averages.items()}
+
+
+# ========================
 # 🎲 SIMULACIÓN DE MERCADO
 # ========================
 
@@ -219,7 +266,11 @@ def simulate_market(df):
     generated_events = []
 
     for i in df.index:
-        prop_id = str(df.at[i, "id"] if "id" in df.columns else df.at[i, "precio_total"])
+        prop_id = str(
+            df.at[i, "propiedad_id"] if "propiedad_id" in df.columns
+            else df.at[i, "id"] if "id" in df.columns
+            else df.at[i, "precio_total"]
+        )
 
         # Simular bajada de precio (20% probabilidad)
         if random.random() < 0.2:
