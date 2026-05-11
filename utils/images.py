@@ -9,28 +9,27 @@ import hashlib
 # Imágenes de edificios y apartamentos reales (Unsplash)
 # Prioridad: fotos de Madrid + edificios residenciales realistas
 IMAGE_POOL = [
-    # Madrid landmarks / architecture (más verídicas para la app)
+    # Verified working Unsplash photos (buildings + apartments realistas)
     "https://images.unsplash.com/photo-1580587771525-78b9dba3b914",  # building facade
     "https://images.unsplash.com/photo-1568605114967-8130f3a36994",  # modern building
     "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",  # luxury home
     "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9",  # modern house
     "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c",  # architectural house
-    "https://images.unsplash.com/photo-1600566753086-00f18f4b3b3a",  # building exterior
+    "https://images.unsplash.com/photo-1505691938895-1758d7feb511",  # bedroom (verified)
     "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde",  # white building
-    "https://images.unsplash.com/photo-1600566753376-12c8ab7c4e8a",  # modern facade
+    "https://images.unsplash.com/photo-1493809842364-78817add7ffb",  # living room (verified)
     "https://images.unsplash.com/photo-1564013799919-ab600027ffc6",  # beautiful home
-    "https://images.unsplash.com/photo-1600563443848-1b8c7b7e8f1e",  # apartment building
-    "https://images.unsplash.com/photo-1600047508003-6f3b8e5a5f5a",  # residential street
+    "https://images.unsplash.com/photo-1484154218962-a197022b5858",  # kitchen (verified)
+    "https://images.unsplash.com/photo-1507089947368-19c1da9775ae",  # bathroom (verified)
     "https://images.unsplash.com/photo-1600585153490-76fb20a32601",  # modern apartment
     "https://images.unsplash.com/photo-1600573472550-8090b5e0745e",  # city building
     "https://images.unsplash.com/photo-1600585154084-4e5fe7c39198",  # luxury villa
-    "https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4",  # building with balcony
-    "https://images.unsplash.com/photo-1600563443202-4f5e1f5a3d7e",  # facade detail
-    # Additional realistic property exteriors
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2",  # cozy apartment
-    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",  # colorful room
-    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688",  # modern loft
-    "https://images.unsplash.com/photo-1560185008-5f44982808b6",  # living room
+    "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf",  # window view (verified)
+    "https://images.unsplash.com/photo-1523217582562-09d0def993a6",  # apartment (verified)
+    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2",  # cozy apartment (verified)
+    "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",  # colorful room (verified)
+    "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688",  # modern loft (verified)
+    "https://images.unsplash.com/photo-1554995207-c18c203602cb",  # couch (verified)
 ]
 
 # Agrupación por barrio — cada uno tiene un subset del pool
