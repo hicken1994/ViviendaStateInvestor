@@ -214,7 +214,7 @@ st.caption(f"📍 {len(map_data)} propiedades en el mapa · Filtradas por score 
 
 st.divider()
 st.markdown("## 🔍 Inspeccionar propiedad")
-st.caption("Seleccioná una propiedad para ver su análisis detallado.")
+st.caption("Selecciona una propiedad para ver su análisis detallado.")
 
 selected_idx = st.selectbox(
     "Propiedad",
@@ -286,4 +286,4 @@ if not premium_df.empty:
         st.write(f"📈 Rentabilidad estimada: **{opp['rentabilidad_estimada']}%**")
         st.markdown("---")
 else:
-    st.write("No hay propiedades con puntuación excepcional con los filtros actuales. Probá ajustar los filtros en el sidebar.")
+    st.write("No hay propiedades con puntuación excepcional con los filtros actuales. Prueba a ajustar los filtros en el sidebar.")

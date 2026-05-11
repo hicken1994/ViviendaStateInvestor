@@ -30,7 +30,7 @@ props = st.session_state.get("compare_properties", [])
 names = st.session_state.get("compare_names", [])
 
 if len(props) < 2:
-    st.warning("Seleccioná al menos 2 propiedades desde el Radar para comparar.")
+    st.warning("Selecciona al menos 2 propiedades desde el Radar para comparar.")
     if st.button("← Volver al Radar"):
         st.switch_page("pages/1_Radar.py")
     st.stop()
@@ -152,7 +152,7 @@ st.divider()
 # ========================
 
 st.markdown("### 🏦 Simulación de inversión comparada")
-st.caption("Mismos parámetros para todas las propiedades. Ajustá y compará.")
+st.caption("Mismos parámetros para todas las propiedades. Ajusta y compara.")
 
 col_e, col_i, col_a = st.columns(3)
 entrada_pct = col_e.slider(

@@ -137,7 +137,7 @@ st.divider()
 if not filtered:
     st.info(
         "📭 No hay eventos aún. "
-        "Simulá el mercado desde el **Radar** (sidebar → Simular cambios de mercado) "
+        "Simula el mercado desde el **Radar** (sidebar → Simular cambios de mercado) "
         "para generar actividad."
     )
     if st.button("← Ir al Radar", type="primary"):
@@ -246,7 +246,7 @@ with st.expander("👁️ Mi watchlist — propiedades vigiladas", expanded=Fals
                     st.session_state.watchlist = wl
                     st.rerun()
         else:
-            st.caption("Ninguna. Vigilá propiedades desde el Radar o desde aquí.")
+            st.caption("Ninguna. Vigila propiedades desde el Radar o desde aquí.")
 
     with col_b:
         st.markdown("**📍 Barrios vigilados**")

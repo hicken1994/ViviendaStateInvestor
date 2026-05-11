@@ -218,7 +218,7 @@ if mode == "📈 Mercado":
                 st.session_state.selected_property = row.to_dict()
                 st.switch_page("pages/3_propiedad.py")
 
-    st.caption("💡 Hacé clic en **Analizar** para ver el desglose completo de una propiedad.")
+    st.caption("💡 Haz clic en **Analizar** para ver el desglose completo de una propiedad.")
 
     # ── Detalle scoring (solo avanzado) ──
     if perfil.get("mostrar_detalle_scoring"):
@@ -247,7 +247,7 @@ if mode == "📈 Mercado":
 else:
 
     if not prop:
-        st.warning("Seleccioná una propiedad primero desde el **Radar**, el **Mapa**, o el modo **Mercado**.")
+        st.warning("Selecciona una propiedad primero desde el **Radar**, el **Mapa**, o el modo **Mercado**.")
         st.stop()
 
     # ── Header con imagen ──
@@ -330,7 +330,7 @@ else:
     # ── Análisis con IA ──
     st.divider()
     st.markdown("### 🤖 Análisis con IA")
-    st.caption("Generá una estrategia de compra personalizada para esta propiedad.")
+    st.caption("Genera una estrategia de compra personalizada para esta propiedad.")
 
     if st.button("🤖 Generar análisis", type="primary", use_container_width=True):
 
@@ -345,7 +345,7 @@ else:
             api_key = os.environ.get("OPENAI_API_KEY")
 
         if not api_key:
-            st.warning("⚠️ No hay API key de OpenAI configurada. Añadí `OPENAI_API_KEY` en Streamlit Secrets o como variable de entorno.")
+            st.warning("⚠️ No hay API key de OpenAI configurada. Añade `OPENAI_API_KEY` en Streamlit Secrets o como variable de entorno.")
         else:
             try:
                 from openai import OpenAI
@@ -357,7 +357,7 @@ Eres un asesor de inversión inmobiliaria. Perfil del inversor: {perfil['nombre'
 Propiedad evaluada:
 {prop}
 
-Basado en estos datos, generá una estrategia de compra adaptada al perfil del inversor.
+Basado en estos datos, genera una estrategia de compra adaptada al perfil del inversor.
 
 Devuelve SOLO JSON:
 {{
