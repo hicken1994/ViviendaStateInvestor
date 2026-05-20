@@ -2,7 +2,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from utils.profiles import get_perfil
-from utils.db import add_is_premium_column, get_connection
+from utils.db import add_is_premium_column
+from utils.services import (
+    get_dashboard_kpis,
+    get_decision_distribution,
+    get_score_distribution,
+    get_top_barrios,
+    get_dashboard_events,
+)
 
 # ========================
 # ⚙️ CONFIGURACIÓN GENERAL
@@ -143,88 +150,9 @@ def format_pct(val):
     return f"{val:.1f}%"
 
 
-def get_dashboard_kpis():
-    """Calcula los 6 KPIs globales del dashboard con SQL directo."""
-    conn = get_connection()
-    try:
-        # Métricas agregadas principales
-        df_main = pd.read_sql("""
-            SELECT
-                COUNT(*)                                              AS total_props,
-                ROUND(AVG(opportunity_score), 2)                      AS avg_score,
-                ROUND(AVG(precio_total), 0)                           AS avg_price,
-                ROUND(AVG(
-                    (precio_m2_barrio * metros - precio_total)
-                    / NULLIF(precio_total, 0) * 100
-                ), 2)                                                 AS avg_rent
-            FROM vista_oportunidades_ai
-        """, conn)
-
-        # Oportunidades: score >= 70 equivale a COMPRAR en scoring.py
-        df_opp = pd.read_sql("""
-            SELECT COUNT(*) AS oportunidades
-            FROM vista_oportunidades_ai
-            WHERE opportunity_score >= 70
-        """, conn)
-
-        # Eventos de los últimos 7 días
-        df_events = pd.read_sql("""
-            SELECT COUNT(*) AS recent_events
-            FROM events
-            WHERE timestamp >= datetime('now', '-7 days')
-        """, conn)
-
-    finally:
-        conn.close()
-
-    return {
-        "total_props":   int(df_main["total_props"].iloc[0]),
-        "avg_score":     float(df_main["avg_score"].iloc[0]),
-        "oportunidades": int(df_opp["oportunidades"].iloc[0]),
-        "avg_price":     float(df_main["avg_price"].iloc[0]),
-        "avg_rent":      float(df_main["avg_rent"].iloc[0]),
-        "recent_events": int(df_events["recent_events"].iloc[0]),
-    }
-
-
-def get_decision_distribution():
-    """
-    Asigna una decisión a cada propiedad según el umbral de
-    opportunity_score (alineado con scoring.py) y devuelve
-    un DataFrame con la cuenta por categoría.
-    """
-    conn = get_connection()
-    try:
-        df = pd.read_sql("""
-            SELECT
-                CASE
-                    WHEN opportunity_score >= 70 THEN 'COMPRAR'
-                    WHEN opportunity_score >= 50 THEN 'NEGOCIAR'
-                    ELSE 'DESCARTAR'
-                END AS decision,
-                COUNT(*) AS count
-            FROM vista_oportunidades_ai
-            GROUP BY decision
-            ORDER BY count DESC
-        """, conn)
-    finally:
-        conn.close()
-    return df
-
-
-def get_recent_events(limit=5):
-    """Devuelve los últimos N eventos con formato legible."""
-    conn = get_connection()
-    try:
-        df = pd.read_sql("""
-            SELECT property_id, event_type, old_value, new_value, timestamp
-            FROM events
-            ORDER BY timestamp DESC
-            LIMIT ?
-        """, conn, params=(limit,))
-    finally:
-        conn.close()
-    return df
+# Las funciones get_dashboard_kpis, get_decision_distribution,
+# get_score_distribution, get_top_barrios y get_dashboard_events
+# ahora viven en utils/services.py
 
 
 EVENT_EMOJIS = {
@@ -278,15 +206,7 @@ st.divider()
 col_ch1, col_ch2 = st.columns(2)
 
 with col_ch1:
-    # Histograma de distribución de scores
-    conn = get_connection()
-    try:
-        df_scores = pd.read_sql(
-            "SELECT opportunity_score FROM vista_oportunidades_ai", conn
-        )
-    finally:
-        conn.close()
-
+    df_scores = get_score_distribution()
     mean_score = df_scores["opportunity_score"].mean()
 
     fig_hist = px.histogram(
@@ -317,17 +237,7 @@ with col_ch1:
     st.plotly_chart(fig_hist, use_container_width=True)
 
 with col_ch2:
-    # Top barrios por opportunity_index
-    conn = get_connection()
-    try:
-        df_barrios = pd.read_sql(
-            "SELECT * FROM radar_oportunidades ORDER BY opportunity_index DESC", conn
-        )
-    finally:
-        conn.close()
-
-    # Limitar a top 10 para legibilidad
-    df_barrios_top = df_barrios.head(10)
+    df_barrios_top = get_top_barrios(limit=10)
 
     fig_bar = px.bar(
         df_barrios_top,
@@ -400,7 +310,7 @@ with col_a1:
 with col_a2:
     st.markdown("#### 🚨 Eventos Recientes")
 
-    df_events = get_recent_events(limit=5)
+    df_events = get_dashboard_events(limit=5)
 
     if df_events.empty:
         st.info("Sin eventos recientes")

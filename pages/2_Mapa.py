@@ -4,7 +4,8 @@ import unicodedata
 import pydeck as pdk
 import numpy as np
 
-from utils.db import get_top_opportunities, get_connection
+from utils.db import get_top_opportunities
+from utils.services import get_map_data, get_distrito_mapping
 from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil
@@ -58,11 +59,9 @@ st.markdown(f"**{perfil['emoji']} {perfil['nombre']}** — _{perfil['descripcion
 # CARGA DE DATOS
 # ========================
 
-conn = get_connection()
 df = get_top_opportunities(300)
-map_df = pd.read_sql("SELECT distrito, latitud, longitud FROM mapas_distritos", conn)
-mapping_df = pd.read_sql("SELECT * FROM distrito_mapping", conn)
-conn.close()
+map_df = get_map_data()
+mapping_df = get_distrito_mapping()
 
 df = add_images(df)
 

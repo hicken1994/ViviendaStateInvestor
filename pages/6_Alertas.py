@@ -5,7 +5,7 @@ Alertas de mercado y watchlist de propiedades vigiladas.
 import streamlit as st
 import pandas as pd
 from utils.db import get_recent_events, get_top_opportunities
-from utils.profiles import get_perfil
+from utils.profiles import get_perfil, compute_score_with_profile
 
 st.set_page_config(page_title="Alertas", page_icon="🚨", layout="wide")
 
@@ -25,6 +25,16 @@ wl = st.session_state.watchlist
 
 events = get_recent_events(200)
 props = get_top_opportunities(300)
+
+if not props.empty:
+    perfil_nombre = st.session_state.get("perfil_inversion", "intermedio")
+    perfil = get_perfil(perfil_nombre)
+    profile_metrics = props.apply(
+        lambda row: compute_score_with_profile(row, perfil),
+        axis=1, result_type="expand",
+    )
+    for col in profile_metrics.columns:
+        props[col] = profile_metrics[col]
 
 # Armar dict de propiedades por propiedad_id para búsqueda rápida
 prop_by_id = {}

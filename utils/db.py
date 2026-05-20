@@ -3,7 +3,8 @@ import random
 
 import pandas as pd
 from datetime import datetime
-from utils.scoring import compute_investment_metrics
+
+from utils.services import get_top_opportunities, get_barrios, get_map_data
 
 DB_PATH = "real_estate.db"
 
@@ -14,83 +15,6 @@ DB_PATH = "real_estate.db"
 
 def get_connection():
     return sqlite3.connect(DB_PATH)
-
-
-
-# ========================
-# 📊 CONSULTAS PRINCIPALES
-# ========================
-
-def get_top_opportunities(limit=50):
-    conn = get_connection()
-    try:
-        df = pd.read_sql("""
-            SELECT *
-            FROM vista_oportunidades_ai
-            ORDER BY opportunity_score DESC
-            LIMIT ?
-        """, conn, params=(limit,))
-    finally:
-        conn.close()
-
-    metrics = df.apply(
-        compute_investment_metrics,
-        axis=1,
-        result_type="expand"
-    )
-
-    cols_to_remove = [
-        "score_total", "score_descuento", "score_precio",
-        "score_liquidez", "score_tamano", "score_ruido",
-        "rentabilidad_estimada", "decision"
-    ]
-    df = df.drop(columns=[c for c in cols_to_remove if c in df.columns], errors="ignore")
-    df = pd.concat([df, metrics], axis=1)
-
-    return df
-
-
-def get_property(prop_id):
-    conn = get_connection()
-    try:
-        df = pd.read_sql("""
-            SELECT *
-            FROM vista_oportunidades_ai
-            WHERE propiedad_id = ?
-        """, conn, params=(prop_id,))
-    finally:
-        conn.close()
-
-    metrics = df.apply(
-        compute_investment_metrics,
-        axis=1,
-        result_type="expand"
-    )
-    df = pd.concat([df, metrics], axis=1)
-    return df
-
-
-def get_barrios():
-    conn = get_connection()
-    try:
-        return pd.read_sql("""
-            SELECT *
-            FROM radar_oportunidades
-            ORDER BY opportunity_index DESC
-        """, conn)
-    finally:
-        conn.close()
-
-
-def get_map_data():
-    conn = get_connection()
-    try:
-        return pd.read_sql("""
-            SELECT distrito, latitud, longitud
-            FROM mapas_distritos
-        """, conn)
-    finally:
-        conn.close()
 
 
 # ========================

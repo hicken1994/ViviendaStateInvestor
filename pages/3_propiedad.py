@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from utils.tooltips import tooltip_help
 from utils.db import get_recent_events, get_barrio_avg_scores
+from utils.services import get_barrio_rent
 from utils.profiles import get_perfil, get_recomendacion_perfil
 from utils.charts import create_radar_chart
 
@@ -127,19 +128,8 @@ cuota = round(prestamo * (r * (1 + r)**n) / ((1 + r)**n - 1), 2)
 # ALQUILER
 # ========================
 
-rent_m2_map = {
-    "Salamanca": 28,
-    "Chamberí": 26,
-    "Centro": 25,
-    "Chamartín": 24,
-    "Tetuán": 22,
-    "Ciudad Lineal": 21,
-    "Carabanchel": 18,
-    "Usera": 17
-}
-
 barrio = prop.get("barrio", "")
-precio_m2_alquiler = rent_m2_map.get(barrio, 20)
+precio_m2_alquiler = get_barrio_rent(barrio)
 
 base_alquiler = round(precio_m2_alquiler * metros, 2)
 alquiler = round(base_alquiler * 1.15, 2)
