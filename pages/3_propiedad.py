@@ -4,7 +4,8 @@ from utils.tooltips import tooltip_help
 from utils.db import get_recent_events, get_barrio_avg_scores
 from utils.services import get_barrio_rent
 from utils.profiles import get_perfil, get_recomendacion_perfil
-from utils.charts import create_radar_chart
+from utils.charts import create_radar_chart, create_price_history_chart
+from utils.history import generate_price_history, compute_price_trend
 
 
 st.title("🏠 Análisis de propiedad")
@@ -95,6 +96,22 @@ col1, col2, col3 = st.columns(3)
 col1.metric("💰 Precio", f"{int(precio):,} €", help=tooltip_help("precio_total"))
 col2.metric("📊 Score", round(prop.get("score_total", 0), 2), help=tooltip_help("score_total"))
 col3.metric("📈 Rentabilidad estimada", f"{round(prop.get('rentabilidad_estimada', 0), 2)}%", help=tooltip_help("rentabilidad_estimada"))
+
+if precio > 0 and prop.get("propiedad_id"):
+    st.divider()
+    st.subheader("📈 Histórico de precio")
+    prop_id_hist = str(prop.get("propiedad_id", prop.get("id", prop.get("precio_total", 0))))
+    hist = generate_price_history(prop_id_hist, float(precio), days=60)
+    trend = compute_price_trend(hist)
+    trend_icon = "📈" if trend["trend"] == "subiendo" else ("📉" if trend["trend"] == "bajando" else "➡️")
+    st.caption(
+        f"Tendencia 60 días: {trend_icon} {trend['change_pct']:+.1f}%  ·  "
+        f"Mín: {int(trend['min']):,}€  ·  "
+        f"Máx: {int(trend['max']):,}€  ·  "
+        f"Media: {int(trend['avg']):,}€"
+    )
+    fig_hist = create_price_history_chart(hist, height=200, show_xaxis=True)
+    st.plotly_chart(fig_hist, use_container_width=True, key="hist_detail")
 
 # ========================
 # SIMULACIÓN

@@ -96,6 +96,49 @@ def create_radar_chart(
     return fig
 
 
+def create_price_history_chart(
+    history: pd.DataFrame,
+    height: int = 120,
+    show_xaxis: bool = False,
+    color: str = "#2E86AB",
+) -> go.Figure:
+    """Mini sparkline del historico de precios."""
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=history["fecha"],
+        y=history["precio"],
+        mode="lines",
+        line=dict(color=color, width=2),
+        fill="tozeroy",
+        fillcolor=f"rgba(46, 134, 171, 0.1)",
+        name="Precio",
+        hovertemplate="%{x|%d/%m/%Y}<br>%{y:,.0f}€<extra></extra>",
+    ))
+
+    fig.update_layout(
+        height=height,
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        hovermode="x unified",
+        xaxis=dict(
+            visible=show_xaxis,
+            showgrid=False,
+            showticklabels=False,
+            zeroline=False,
+        ),
+        yaxis=dict(
+            visible=False,
+            showgrid=False,
+            showticklabels=False,
+            zeroline=False,
+        ),
+    )
+    return fig
+
+
 def _hex_to_rgba(hex_color: str, alpha: float = 0.12) -> str:
     """Convierte color hex a string rgba."""
     h = hex_color.lstrip("#")

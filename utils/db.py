@@ -1,8 +1,9 @@
+import json
 import sqlite3
 import random
 
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from utils.services import get_top_opportunities, get_barrios, get_map_data
 
@@ -208,6 +209,25 @@ def simulate_market(df):
                 "type": "price_drop",
                 "old": round(old_price, 2),
                 "new": new_price,
+            })
+
+        # Flash drop: baja temporal mas agresiva (8-15%) con expiracion
+        if random.random() < 0.08:
+            old_price = df.at[i, "precio_total"]
+            drop = random.uniform(0.85, 0.92)
+            flash_price = round(old_price * drop, 2)
+            expires_at = (datetime.now() + timedelta(hours=random.randint(24, 72))).isoformat()
+
+            df.at[i, "precio_total"] = flash_price
+            df.at[i, "flash_price_original"] = old_price
+            df.at[i, "flash_expires"] = expires_at
+
+            generated_events.append({
+                "property_id": prop_id,
+                "type": "flash_drop",
+                "old": round(old_price, 2),
+                "new": flash_price,
+                "extra": json.dumps({"expires": expires_at, "drop_pct": round((1 - drop) * 100, 1)}),
             })
 
         # Aumentar días

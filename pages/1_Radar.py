@@ -4,7 +4,8 @@ from utils.db import get_top_opportunities, simulate_market, get_recent_events, 
 from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
-from utils.charts import create_radar_chart, create_comparison_radar
+from utils.charts import create_radar_chart, create_comparison_radar, create_price_history_chart
+from utils.history import generate_price_history, compute_price_trend
 from components.footer import render_footer
 from components.score_help import render_score_breakdown
 
@@ -135,12 +136,26 @@ with col_info:
     col_m2.metric("📊 Score", f"{round(score, 1)}", help=tooltip_help("score_total"))
     col_m3.metric("📈 Rentabilidad", f"{round(best.get('rentabilidad_estimada', 0), 1)}%", help=tooltip_help("rentabilidad_estimada"))
 
+    if best.get("flash_expires"):
+        st.markdown(
+            f"🔥 **Oferta flash** — Precio reducido temporalmente. "
+            f"Vence: {str(best['flash_expires'])[:16]}"
+        )
+
     st.markdown(
         f"🏗️ {int(best.get('metros', 0))} m² · "
         f"⏱️ {int(best.get('dias', 0))} días en mercado"
     )
 
     st.markdown(f"**Decisión:** {badge_color} **{decision_label}**")
+
+    best_id_val = str(best.get("propiedad_id", best.get("precio_total", 0)))
+    hist = generate_price_history(best_id_val, float(best.get("precio_total", 0)), days=45)
+    trend = compute_price_trend(hist)
+    trend_icon = "📈" if trend["trend"] == "subiendo" else ("📉" if trend["trend"] == "bajando" else "➡️")
+    st.caption(f"Historico 45d: {trend_icon} {trend['change_pct']:+.1f}%  ·  Min: {int(trend['min']):,}€  ·  Max: {int(trend['max']):,}€")
+    fig_spark = create_price_history_chart(hist, height=80)
+    st.plotly_chart(fig_spark, use_container_width=True, key="spark_best")
 
     if st.button("🔍 Ver análisis completo", type="primary", key="best_btn"):
         st.session_state.selected_property = best.to_dict()
@@ -242,6 +257,9 @@ for idx in range(0, len(top5), 3):
                     f"🏗️ {int(row.get('metros', 0))} m² · "
                     f"⏱️ {int(row.get('dias', 0))} días"
                 )
+
+                if row.get("flash_expires"):
+                    st.markdown(f"🔥 **Flash** — vence {str(row['flash_expires'])[:16]}")
 
                 if st.button(
                     "Analizar →",
