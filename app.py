@@ -10,6 +10,10 @@ from utils.services import (
     get_top_barrios,
     get_dashboard_events,
 )
+from utils.datasources import get_dataset_stats, get_last_event_timestamp, METODOLOGIA
+from utils.timefmt import time_ago, format_timestamp
+from components.footer import render_footer
+from components.score_help import render_score_legend
 
 # ========================
 # ⚙️ CONFIGURACIÓN GENERAL
@@ -130,6 +134,20 @@ st.session_state["perfil_inversion"] = perfil_seleccionado
 perfil = get_perfil(str(perfil_seleccionado))
 
 st.sidebar.caption(f"_{perfil['descripcion']}_")
+st.sidebar.markdown("---")
+
+stats = get_dataset_stats()
+last_event = get_last_event_timestamp()
+
+st.sidebar.markdown("### 📊 Estado del dataset")
+st.sidebar.markdown(
+    f"- 🏠 **{stats['propiedades']:,}** propiedades  \n"
+    f"- 📍 **{stats['barrios']}** barrios en **{stats['distritos']}** distritos  \n"
+    f"- 🚨 **{stats['eventos']}** eventos registrados"
+)
+st.sidebar.caption(
+    f"Última actividad: {time_ago(last_event) if last_event else 'sin datos'}"
+)
 st.sidebar.markdown("---")
 
 # ========================
@@ -331,7 +349,7 @@ with col_a2:
                 new_str = format_pct(new_val) if pd.notna(new_val) else "—"
 
             ts = pd.Timestamp(ev["timestamp"])
-            time_str = ts.strftime("%d/%m %H:%M")
+            time_str = f"{ts.strftime('%d/%m %H:%M')} ({time_ago(ts)})"
 
             st.markdown(
                 f"<div class='event-item'>"
@@ -432,3 +450,10 @@ st.caption(
     "Cambia tu perfil en el sidebar izquierdo → "
     "se ajustan métricas y recomendaciones en toda la app."
 )
+
+st.divider()
+
+with st.expander("📖 Metodología — ¿Cómo se calcula todo?", expanded=False):
+    st.markdown(METODOLOGIA)
+
+render_footer(show_sources=True, show_disclaimer=True)

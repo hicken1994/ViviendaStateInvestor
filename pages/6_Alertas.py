@@ -6,6 +6,8 @@ import streamlit as st
 import pandas as pd
 from utils.db import get_recent_events, get_top_opportunities
 from utils.profiles import get_perfil, compute_score_with_profile
+from utils.timefmt import time_ago, format_timestamp
+from components.footer import render_footer
 
 st.set_page_config(page_title="Alertas", page_icon="🚨", layout="wide")
 
@@ -211,7 +213,7 @@ for e in filtered:
         with cols[3]:
             ts = e.get("timestamp")
             if ts:
-                st.caption(str(ts)[:19])
+                st.caption(time_ago(ts))
 
         with cols[4]:
             # Watch/unwatch button
@@ -289,3 +291,5 @@ st.divider()
 # ========================
 
 st.button("← Volver al Radar", use_container_width=True, on_click=lambda: st.switch_page("pages/1_Radar.py"))
+
+render_footer(show_sources=False, show_disclaimer=True)

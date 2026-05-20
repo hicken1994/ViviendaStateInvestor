@@ -5,6 +5,8 @@ from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
 from utils.charts import create_radar_chart, create_comparison_radar
+from components.footer import render_footer
+from components.score_help import render_score_breakdown
 
 
 # ========================
@@ -408,3 +410,12 @@ if perfil.get("mostrar_detalle_scoring"):
                         height=280,
                     )
                     st.plotly_chart(fig, use_container_width=True, key=f"radar_top3_{i}")
+
+st.divider()
+
+if not df.empty and perfil.get("mostrar_detalle_scoring"):
+    best_row = df.iloc[0].to_dict() if len(df) > 0 else None
+    if best_row:
+        render_score_breakdown(best_row, perfil, expanded=False)
+
+render_footer(show_sources=False, show_disclaimer=True)
