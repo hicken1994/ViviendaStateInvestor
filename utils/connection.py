@@ -7,7 +7,6 @@ import logging
 from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 
 DB_PATH = "real_estate.db"
 
@@ -42,6 +41,10 @@ def get_conn():
 def get_conn_ro():
     """Context manager para conexiones de solo lectura (sin commit)."""
     conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA cache_size=-8000")
+    conn.execute("PRAGMA temp_store=MEMORY")
     try:
         yield conn
     finally:

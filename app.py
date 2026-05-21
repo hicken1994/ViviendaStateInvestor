@@ -1,7 +1,10 @@
+import logging
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 from utils.profiles import get_perfil
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 from utils.db import add_is_premium_column
 from utils.migrations import run_migrations
 from utils.services import (

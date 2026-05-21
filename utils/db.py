@@ -7,6 +7,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 from utils.connection import get_conn, get_conn_ro
+from utils.profiles import compute_score_with_profile
+from utils.services import get_top_opportunities
 
 logger = logging.getLogger(__name__)
 
@@ -14,52 +16,21 @@ DB_PATH = "real_estate.db"
 
 
 # ========================
-# 📸 SNAPSHOT HISTÓRICO
+# 🛠️ ACTUALIZACIÓN DE ESQUEMA
 # ========================
 
-def ensure_history_table():
-    with get_conn() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS property_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                property_id TEXT,
-                precio_total REAL,
-                rentabilidad REAL,
-                fecha TIMESTAMP
-            )
+def add_is_premium_column():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(oportunidades)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if "is_premium" not in columns:
+        cursor.execute("""
+            ALTER TABLE oportunidades
+            ADD COLUMN is_premium INTEGER DEFAULT 0
         """)
-
-
-def save_snapshot(df):
-    ensure_history_table()
-    with get_conn() as conn:
-        for _, row in df.iterrows():
-            conn.execute("""
-                INSERT INTO property_history (property_id, precio_total, rentabilidad, fecha)
-                VALUES (?, ?, ?, ?)
-            """, (
-                str(row.get("id") or row.get("url") or row.get("precio_total")),
-                round(row.get("precio_total", 0), 2),
-                round(row.get("rentabilidad_estimada", 0), 2),
-                datetime.now()
-            ))
-
-
-def detect_price_drop():
-    with get_conn_ro() as conn:
-        df = pd.read_sql("""
-            SELECT property_id,
-                   MAX(precio_total) as old_price,
-                   MIN(precio_total) as new_price
-            FROM property_history
-            GROUP BY property_id
-            HAVING old_price > new_price
-        """, conn)
-
-    df["drop_pct"] = round(
-        (df["old_price"] - df["new_price"]) / df["old_price"] * 100, 2
-    )
-    return df[df["drop_pct"] > 5]
+        conn.commit()
+    conn.close()
 
 
 # ========================
@@ -112,8 +83,6 @@ def get_recent_events(limit=20):
 # ========================
 
 def get_barrio_avg_scores(barrio: str, perfil: dict) -> dict:
-    from utils.profiles import compute_score_with_profile
-
     with get_conn_ro() as conn:
         df = pd.read_sql("""
             SELECT *
