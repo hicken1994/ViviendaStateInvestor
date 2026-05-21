@@ -1,16 +1,10 @@
-import sqlite3
 import pandas as pd
-
-DB_PATH = "real_estate.db"
-
-
-def _get_conn():
-    return sqlite3.connect(DB_PATH)
+from utils.connection import get_conn_ro
+from utils.cache import cached
 
 
 def get_dashboard_kpis() -> dict:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         df_main = pd.read_sql("""
             SELECT
                 COUNT(*)                                          AS total_props,
@@ -34,8 +28,6 @@ def get_dashboard_kpis() -> dict:
             FROM events
             WHERE timestamp >= datetime('now', '-7 days')
         """, conn)
-    finally:
-        conn.close()
 
     return {
         "total_props":   int(df_main["total_props"].iloc[0]),
@@ -48,8 +40,7 @@ def get_dashboard_kpis() -> dict:
 
 
 def get_decision_distribution() -> pd.DataFrame:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         return pd.read_sql("""
             SELECT
                 CASE
@@ -62,97 +53,77 @@ def get_decision_distribution() -> pd.DataFrame:
             GROUP BY decision
             ORDER BY count DESC
         """, conn)
-    finally:
-        conn.close()
 
 
 def get_score_distribution() -> pd.DataFrame:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         return pd.read_sql(
             "SELECT opportunity_score FROM vista_oportunidades_ai", conn
         )
-    finally:
-        conn.close()
 
 
 def get_top_barrios(limit: int = 10) -> pd.DataFrame:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         df = pd.read_sql(
             "SELECT * FROM radar_oportunidades ORDER BY opportunity_index DESC", conn
         )
-    finally:
-        conn.close()
     return df.head(limit)
 
 
+@cached(ttl=30)
 def get_dashboard_events(limit: int = 5) -> pd.DataFrame:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         return pd.read_sql("""
             SELECT property_id, event_type, old_value, new_value, timestamp
             FROM events
             ORDER BY timestamp DESC
             LIMIT ?
         """, conn, params=(limit,))
-    finally:
-        conn.close()
 
 
+@cached(ttl=300)
 def get_map_data() -> pd.DataFrame:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         return pd.read_sql("""
             SELECT distrito, latitud, longitud
             FROM mapas_distritos
         """, conn)
-    finally:
-        conn.close()
 
 
+@cached(ttl=300)
 def get_distrito_mapping() -> pd.DataFrame:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         return pd.read_sql("SELECT * FROM distrito_mapping", conn)
-    finally:
-        conn.close()
 
 
+@cached(ttl=300)
 def get_barrios() -> pd.DataFrame:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         return pd.read_sql("""
             SELECT *
             FROM radar_oportunidades
             ORDER BY opportunity_index DESC
         """, conn)
-    finally:
-        conn.close()
 
 
+@cached(ttl=60)
 def get_barrio_rent(barrio: str, default: float = 20) -> float:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         df = pd.read_sql(
             "SELECT precio_m2_alquiler FROM barrio_rent WHERE barrio = ?",
             conn, params=(barrio,)
         )
-    finally:
-        conn.close()
     if not df.empty:
         return float(df["precio_m2_alquiler"].iloc[0])
     return default
 
 
+@cached(ttl=30)
 def get_top_opportunities(limit: int = 50) -> pd.DataFrame:
-    conn = _get_conn()
-    try:
+    with get_conn_ro() as conn:
         return pd.read_sql("""
             SELECT *
             FROM vista_oportunidades_ai
             ORDER BY opportunity_score DESC
             LIMIT ?
         """, conn, params=(limit,))
-    finally:
-        conn.close()

@@ -1,6 +1,6 @@
-from datetime import datetime
+from utils.connection import get_conn_ro
 
-DATASET_VERSION = "2.1"
+DATASET_VERSION = "2.2"
 DATASET_DATE = "Mayo 2026"
 
 FUENTES = {
@@ -26,7 +26,7 @@ FUENTES = {
     },
 }
 
-METODOLOGIA = f"""
+METODOLOGIA = """
 **Vivienda AI** procesa datos del mercado inmobiliario de Madrid combinando múltiples fuentes oficiales y portales inmobiliarios.
 El dataset contiene **más de 3.000 propiedades** distribuidas en los **21 distritos** de Madrid, con más de 30 atributos
 por propiedad que incluyen precio, superficie, ubicación, y scores de inversión calculados mediante un modelo
@@ -64,29 +64,21 @@ DISCLAIMER = """
 
 
 def get_last_event_timestamp() -> str | None:
-    import sqlite3
     import pandas as pd
-    conn = sqlite3.connect("real_estate.db")
-    try:
+    with get_conn_ro() as conn:
         df = pd.read_sql("SELECT timestamp FROM events ORDER BY timestamp DESC LIMIT 1", conn)
-        if not df.empty:
-            return str(df["timestamp"].iloc[0])
-    finally:
-        conn.close()
+    if not df.empty:
+        return str(df["timestamp"].iloc[0])
     return None
 
 
 def get_dataset_stats() -> dict:
-    import sqlite3
     import pandas as pd
-    conn = sqlite3.connect("real_estate.db")
-    try:
+    with get_conn_ro() as conn:
         total = pd.read_sql("SELECT COUNT(*) as c FROM vista_oportunidades_ai", conn)["c"].iloc[0]
         barrios = pd.read_sql("SELECT COUNT(DISTINCT barrio) as c FROM vista_oportunidades_ai", conn)["c"].iloc[0]
         distritos = pd.read_sql("SELECT COUNT(*) as c FROM mapas_distritos", conn)["c"].iloc[0]
         eventos = pd.read_sql("SELECT COUNT(*) as c FROM events", conn)["c"].iloc[0]
-    finally:
-        conn.close()
     return {
         "propiedades": int(total),
         "barrios": int(barrios),

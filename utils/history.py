@@ -67,19 +67,21 @@ def compute_price_trend(history: pd.DataFrame) -> dict:
 
 def get_or_generate_history(prop_id, current_price: float, days: int = 60) -> pd.DataFrame:
     """Intenta leer historico de la DB, si no existe genera uno sintetico."""
-    import sqlite3
-    conn = sqlite3.connect("real_estate.db")
+    import logging
+    from utils.connection import get_conn_ro
+
     try:
-        df = pd.read_sql(
-            "SELECT precio_total as precio, fecha FROM property_history "
-            "WHERE property_id = ? ORDER BY fecha ASC",
-            conn, params=(str(prop_id),),
+        with get_conn_ro() as conn:
+            df = pd.read_sql(
+                "SELECT precio_total as precio, fecha FROM property_history "
+                "WHERE property_id = ? ORDER BY fecha ASC",
+                conn, params=(str(prop_id),),
+            )
+            if len(df) >= 5:
+                return df
+    except Exception as e:
+        logging.getLogger(__name__).warning(
+            "No se pudo leer historico para %s: %s", prop_id, e
         )
-        if len(df) >= 5:
-            return df
-    except Exception:
-        pass
-    finally:
-        conn.close()
 
     return generate_price_history(prop_id, current_price, days)

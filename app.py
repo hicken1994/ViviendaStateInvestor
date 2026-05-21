@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from utils.profiles import get_perfil
 from utils.db import add_is_premium_column
+from utils.migrations import run_migrations
 from utils.services import (
     get_dashboard_kpis,
     get_decision_distribution,
@@ -31,6 +32,7 @@ st.set_page_config(
 # ========================
 
 if "db_initialized" not in st.session_state:
+    run_migrations()
     add_is_premium_column()
     st.session_state["db_initialized"] = True
 
