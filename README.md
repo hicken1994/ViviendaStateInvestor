@@ -113,4 +113,4 @@ Los precios de alquiler por barrio están precargados en la base de datos.
 
 ## 📝 Licencia
 
-MIT
+Todos los derechos reservados.
