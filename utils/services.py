@@ -127,3 +127,37 @@ def get_top_opportunities(limit: int = 50) -> pd.DataFrame:
             ORDER BY opportunity_score DESC
             LIMIT ?
         """, conn, params=(limit,))
+
+
+def get_barrio_avg_scores(barrio: str, perfil: dict) -> dict:
+    from utils.profiles import compute_score_with_profile
+
+    with get_conn_ro() as conn:
+        df = pd.read_sql("""
+            SELECT *
+            FROM vista_oportunidades_ai
+            WHERE barrio = ?
+        """, conn, params=(barrio,))
+
+    if df.empty:
+        return {}
+
+    profile_metrics = df.apply(
+        lambda row: compute_score_with_profile(row, perfil),
+        axis=1, result_type="expand",
+    )
+
+    score_cols = [
+        "score_total", "score_descuento", "score_precio",
+        "score_liquidez", "score_tamano", "score_ruido",
+    ]
+    available = [c for c in score_cols if c in profile_metrics.columns]
+    averages = profile_metrics[available].mean().to_dict()
+    return {k: round(v, 2) for k, v in averages.items()}
+    with get_conn_ro() as conn:
+        return pd.read_sql("""
+            SELECT *
+            FROM vista_oportunidades_ai
+            ORDER BY opportunity_score DESC
+            LIMIT ?
+        """, conn, params=(limit,))

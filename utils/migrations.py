@@ -107,3 +107,18 @@ def migration_003(conn: sqlite3.Connection):
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA cache_size=-8000")
     conn.execute("PRAGMA temp_store=MEMORY")
+
+
+@_migration(4, "Crear tabla events si no existe (schema completo)")
+def migration_004(conn: sqlite3.Connection):
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            property_id TEXT,
+            event_type TEXT,
+            old_value REAL,
+            new_value REAL,
+            extra TEXT,
+            timestamp TIMESTAMP
+        )
+    """)
