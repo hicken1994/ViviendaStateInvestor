@@ -257,6 +257,8 @@ st.sidebar.caption("Madrid Investment Intelligence")
 
 if user:
     st.sidebar.markdown(f"👤 {user.email}")
+    if st.sidebar.button("⚙️ Mi Cuenta", width="stretch", key="mi_cuenta_sidebar"):
+        st.switch_page("pages/7_Mi_Cuenta.py")
     if st.sidebar.button("🚪 Cerrar sesión", width="stretch"):
         sign_out()
 
@@ -567,6 +569,13 @@ with col_n6:
     st.caption("Eventos de mercado y propiedades vigiladas.")
     if st.button("Abrir Alertas", width="stretch"):
         st.switch_page("pages/6_Alertas.py")
+
+col_n7, col_n8, col_n9 = st.columns([1, 1, 1])
+with col_n8:
+    st.markdown("#### 👤 Mi Cuenta")
+    st.caption("Tu perfil, plan y configuración.")
+    if st.button("Abrir Mi Cuenta", width="stretch"):
+        st.switch_page("pages/7_Mi_Cuenta.py")
 
 st.divider()
 
