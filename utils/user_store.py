@@ -27,7 +27,7 @@ def load_preferences() -> dict:
             }
     except Exception as e:
         logger.warning(f"Error loading preferences: {e}")
-    return {"perfil_inversion": "intermedio", "tour_completed": False}
+    return {"perfil_inversion": "intermedio", "tour_completed": False, "plan": "Starter"}
 
 
 def save_preference(key: str, value: str):

@@ -133,3 +133,25 @@ def migration_004(conn: sqlite3.Connection):
             timestamp TIMESTAMP
         )
     """)
+
+
+@_migration(5, "Crear vista_oportunidades_ai si no existe")
+def migration_005(conn: sqlite3.Connection):
+    cursor = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='view' AND name='vista_oportunidades_ai'"
+    )
+    if cursor.fetchone() is None:
+        conn.execute("""
+            CREATE VIEW vista_oportunidades_ai AS
+            SELECT
+                o.*,
+                ROUND(
+                    CASE
+                        WHEN o.precio_m2_barrio IS NOT NULL
+                             AND o.precio_m2_barrio != 0
+                        THEN (o.precio_m2_barrio - o.precio_m2) * 100.0 / o.precio_m2_barrio
+                        ELSE NULL
+                    END
+                , 2) AS descuento_pct
+            FROM oportunidades o
+        """)
