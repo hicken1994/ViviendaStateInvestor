@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 from utils.profiles import get_perfil
 from utils.charts import create_comparison_radar
+from utils.auth import require_auth
 
 st.set_page_config(
     page_title="Comparador",
@@ -13,6 +14,8 @@ st.set_page_config(
     layout="wide",
 )
 
+
+require_auth()
 
 # ========================
 # PERFIL

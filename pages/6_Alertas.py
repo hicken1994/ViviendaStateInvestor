@@ -8,8 +8,11 @@ from utils.db import get_recent_events, get_top_opportunities
 from utils.profiles import get_perfil, compute_score_with_profile
 from utils.timefmt import time_ago, format_timestamp
 from components.footer import render_footer
+from utils.auth import require_auth
 
 st.set_page_config(page_title="Alertas", page_icon="🚨", layout="wide")
+
+require_auth()
 
 # ========================
 # WATCHLIST — init

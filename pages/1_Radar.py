@@ -8,7 +8,10 @@ from utils.charts import create_radar_chart, create_comparison_radar, create_pri
 from utils.history import generate_price_history, compute_price_trend
 from components.footer import render_footer
 from components.score_help import render_score_breakdown
+from utils.auth import require_auth
 
+
+require_auth()
 
 # ========================
 # PERFIL

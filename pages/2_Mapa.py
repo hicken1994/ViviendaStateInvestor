@@ -9,7 +9,10 @@ from utils.services import get_map_data, get_distrito_mapping
 from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
+from utils.auth import require_auth
 
+
+require_auth()
 
 # ========================
 # CONSTANTES

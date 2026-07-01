@@ -6,7 +6,10 @@ from utils.services import get_barrio_rent
 from utils.profiles import get_perfil, get_recomendacion_perfil
 from utils.charts import create_radar_chart, create_price_history_chart
 from utils.history import generate_price_history, compute_price_trend
+from utils.auth import require_auth
 
+
+require_auth()
 
 st.title("🏠 Análisis de propiedad")
 st.caption("💡 Aquí se analiza en detalle si una propiedad es buena inversión para ti.")

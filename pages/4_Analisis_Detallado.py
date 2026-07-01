@@ -7,7 +7,10 @@ from utils.images import add_images
 from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
 import json
+from utils.auth import require_auth
 
+
+require_auth()
 
 # ========================
 # PERFIL

@@ -18,6 +18,7 @@ from utils.datasources import get_dataset_stats, get_last_event_timestamp, METOD
 from utils.timefmt import time_ago, format_timestamp
 from components.footer import render_footer
 from components.score_help import render_score_legend
+from utils.auth import get_user, sign_in, sign_up, sign_out
 
 # ========================
 # ⚙️ CONFIGURACIÓN GENERAL
@@ -29,6 +30,79 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+user = get_user()
+
+if user is None:
+    LOGIN_CSS = """
+    <style>
+        .login-container {
+            max-width: 420px;
+            margin: 4rem auto;
+            padding: 2.5rem;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .login-container h1 { color: white; text-align: center; margin-bottom: 0.25rem; }
+        .login-container .subtitle { color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2rem; font-size: 0.9rem; }
+    </style>
+    """
+    st.markdown(LOGIN_CSS, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown('<div class="login-container">', unsafe_allow_html=True)
+        st.markdown("<h1>🏠 Vivienda AI</h1>", unsafe_allow_html=True)
+        st.markdown('<p class="subtitle">Madrid Investment Intelligence</p>', unsafe_allow_html=True)
+
+        tab_login, tab_signup = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
+
+        with tab_login:
+            with st.form("login_form"):
+                email = st.text_input("Email", placeholder="tu@email.com", key="login_email")
+                password = st.text_input("Contraseña", type="password", placeholder="••••••••", key="login_pass")
+                submitted = st.form_submit_button("Iniciar Sesión", type="primary", use_container_width=True)
+                if submitted:
+                    if not email or not password:
+                        st.error("Completá todos los campos")
+                    else:
+                        with st.spinner("Autenticando..."):
+                            try:
+                                resp = sign_in(email, password)
+                                if resp and resp.user:
+                                    st.rerun()
+                                else:
+                                    st.error("Email o contraseña incorrectos")
+                            except Exception as e:
+                                st.error(f"Error de conexión: {e}")
+
+        with tab_signup:
+            with st.form("signup_form"):
+                email = st.text_input("Email", placeholder="tu@email.com", key="signup_email")
+                password = st.text_input("Contraseña", type="password", placeholder="••••••••", key="signup_pass")
+                confirm = st.text_input("Confirmar contraseña", type="password", placeholder="••••••••", key="signup_confirm")
+                submitted = st.form_submit_button("Crear Cuenta", type="primary", use_container_width=True)
+                if submitted:
+                    if not email or not password:
+                        st.error("Completá todos los campos")
+                    elif password != confirm:
+                        st.error("Las contraseñas no coinciden")
+                    elif len(password) < 6:
+                        st.error("La contraseña debe tener al menos 6 caracteres")
+                    else:
+                        with st.spinner("Registrando..."):
+                            try:
+                                resp = sign_up(email, password)
+                                if resp and resp.user:
+                                    st.success("Registro exitoso. Revisá tu email para confirmar la cuenta.")
+                                else:
+                                    st.info("Registro creado. Revisá tu email para confirmar.")
+                            except Exception as e:
+                                st.error(f"Error al registrarse: {e}")
+
+        st.markdown('</div>', unsafe_allow_html=True)
+    st.stop()
 
 # ========================
 # 🛠️ INICIALIZACIÓN DB (UNA SOLA VEZ)
@@ -115,6 +189,11 @@ st.markdown("""
 
 st.sidebar.markdown("## 🏠 Vivienda AI")
 st.sidebar.caption("Madrid Investment Intelligence")
+
+if user:
+    st.sidebar.markdown(f"👤 {user.email}")
+    if st.sidebar.button("🚪 Cerrar sesión", use_container_width=True):
+        sign_out()
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎯 Tu perfil de inversión")
