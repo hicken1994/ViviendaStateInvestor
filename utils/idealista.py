@@ -23,6 +23,13 @@ FALLBACK_BARRIOS_MADRID = [
 
 
 def _get_rapidapi_key() -> str | None:
+    try:
+        import streamlit as st
+        key = st.secrets.get("RAPIDAPI_KEY")
+        if key:
+            return key
+    except Exception:
+        pass
     return os.environ.get("RAPIDAPI_KEY")
 
 
