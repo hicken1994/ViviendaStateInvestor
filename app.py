@@ -177,6 +177,15 @@ if "db_initialized" not in st.session_state:
 
 st.markdown("""
 <style>
+    /* Hide Streamlit default UI */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stAppToolbar {display: none;}
+    .stAppDeployButton {display: none;}
+    div[data-testid="stToolbar"] {display: none;}
+    section[data-testid="stSidebar"] + div {padding-top: 0;}
+
     .block-container { padding-top: 1rem; }
 
     div[data-testid="stMetric"] {

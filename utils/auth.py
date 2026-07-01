@@ -1,11 +1,12 @@
+import os
 import streamlit as st
 from supabase import create_client
 import logging
 
 logger = logging.getLogger(__name__)
 
-SUPABASE_URL = "https://kozrvfyszumslfnvywtd.supabase.co"
-SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtvenJ2ZnlzenVtc2xmbnZ5d3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MTI3NDUsImV4cCI6MjA5ODQ4ODc0NX0._-kucZIcoi4Q9l3BwHCEIh5J9Z5HTDo4K7IMvS0Bo78"
+SUPABASE_URL = st.secrets.get("SUPABASE_URL") or os.environ.get("SUPABASE_URL")
+SUPABASE_ANON_KEY = st.secrets.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_ANON_KEY")
 
 
 @st.cache_resource

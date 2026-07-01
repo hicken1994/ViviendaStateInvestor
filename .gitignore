@@ -26,7 +26,16 @@ env/
 .streamlit/secrets.toml
 
 
-# Datos comprimidos / temporales
+# Databases (build artifacts)
+*.db
+*.sqlite
+*.sqlite3
+
+# Python cache files (catch rogue pyc outside __pycache__)
+*.pyc
+
+# Datasets (reproducible o con copyright)
+datos reales/
 *.zip
 *.csv.zip
 
