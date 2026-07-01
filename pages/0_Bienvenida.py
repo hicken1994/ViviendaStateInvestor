@@ -44,7 +44,7 @@ with col2:
 st.markdown("## 🗺️ Tour guiado")
 
 st.markdown('<div class="tour-card">', unsafe_allow_html=True)
-st.markdown("Explorá cada funcionalidad a tu ritmo. Hacé clic en cada paso para expandirlo.")
+st.markdown("Explora cada funcionalidad a tu ritmo. Haz clic en cada paso para expandirlo.")
 
 steps = [
     ("📊 Dashboard Global",
@@ -57,9 +57,9 @@ steps = [
      "Liquidez (15pts), Tamaño (10pts) y Ruido (10pts). "
      "El score se ajusta según tu perfil de inversor (Básico, Intermedio, Avanzado)."),
     ("🗺️ Mapa de Calor",
-     "Visualizá la concentración de oportunidades en el mapa de Madrid. "
+     "Visualiza la concentración de oportunidades en el mapa de Madrid. "
      "Las zonas más calientes tienen mayor densidad de propiedades con alto score. "
-     "Usá el distrito mapping para entender qué zonas priorizar."),
+     "Usa el distrito mapping para entender qué zonas priorizar."),
     ("🏠 Análisis de Propiedad",
      "Simulación completa de compra: precios, rentabilidad estimada, cashflow mensual, "
      "break-even, margen. Compará contra el promedio del barrio y tomá decisiones "
@@ -69,15 +69,15 @@ steps = [
      "Usa OpenAI para generar recomendaciones de compra, estrategias de negociación "
      "y análisis de riesgo. Ideal para inversores que quieren un segundo opinion."),
     ("⚖️ Comparador",
-     "Seleccioná 2+ propiedades desde el Radar y compralas lado a lado. "
+     "Selecciona 2+ propiedades desde el Radar y compáralas lado a lado. "
      "Vas a ver KPIs comparativos, un radar overlay, tabla de diferencias "
      "y una simulación compartida. Decisión informada en segundos."),
     ("🚨 Alertas & Watchlist",
-     "Seguí propiedades y barrios. Recibí notificaciones de bajadas de precio "
+     "Sigue propiedades y barrios. Recibe notificaciones de bajadas de precio "
      "y subidas de rentabilidad. Las Flash Drops te muestran propiedades con "
      "caídas temporales. Todo persiste entre sesiones."),
     ("🎯 Perfiles de Inversor",
-     "En el sidebar podés elegir entre 3 perfiles: Básico (seguridad, cashflow mínimo 200€/mes), "
+     "En el sidebar puedes elegir entre 3 perfiles: Básico (seguridad, cashflow mínimo 200€/mes), "
      "Intermedio (equilibrio, cashflow mínimo 100€/mes) y Avanzado (máxima rentabilidad, "
      "sin cashflow mínimo). Cada perfil ajusta los umbrales de decisión en TODA la app."),
 ]
@@ -99,4 +99,4 @@ with col_b2:
         save_tour_completed()
         st.switch_page("app.py")
 
-st.caption("Siempre podés volver a este tour desde la configuración de tu perfil.")
+st.caption("Siempre puedes volver a este tour desde la configuración de tu perfil.")

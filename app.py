@@ -55,8 +55,8 @@ if user is None:
             ("📡 Radar de oportunidades", "Detecta propiedades infravaloradas con scoring multi-factor"),
             ("🗺️ Mapa de calor interactivo", "Visualiza concentración de oportunidades por zona"),
             ("🤖 AI Copilot", "Análisis inteligente y recomendaciones de compra"),
-            ("⚖️ Comparador", "Evaluá 2+ propiedades lado a lado con simulación"),
-            ("🚨 Alertas & Watchlist", "Seguí propiedades y recibí notificaciones de mercado"),
+            ("⚖️ Comparador", "Compara 2+ propiedades lado a lado con simulación"),
+            ("🚨 Alertas & Watchlist", "Sigue propiedades y recibe notificaciones de mercado"),
             ("📊 Dashboard global", "KPIs, tendencias y eventos del mercado madrileño"),
         ]
         for icon, desc in feats:
@@ -115,7 +115,7 @@ if user is None:
             """, unsafe_allow_html=True)
 
         st.divider()
-        st.markdown("<h3 style='text-align: center; color: white;'>🔐 Accedé a la plataforma</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; color: white;'>🔐 Accede a la plataforma</h3>", unsafe_allow_html=True)
 
         tab_login, tab_signup = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
 
@@ -126,7 +126,7 @@ if user is None:
                 submitted = st.form_submit_button("Iniciar Sesión", type="primary", use_container_width=True)
                 if submitted:
                     if not email or not password:
-                        st.error("Completá todos los campos")
+                        st.error("Completa todos los campos")
                     else:
                         with st.spinner("Autenticando..."):
                             try:
@@ -146,7 +146,7 @@ if user is None:
                 submitted = st.form_submit_button("Crear Cuenta", type="primary", use_container_width=True)
                 if submitted:
                     if not email or not password:
-                        st.error("Completá todos los campos")
+                        st.error("Completa todos los campos")
                     elif password != confirm:
                         st.error("Las contraseñas no coinciden")
                     elif len(password) < 6:
@@ -156,9 +156,9 @@ if user is None:
                             try:
                                 resp = sign_up(email, password)
                                 if resp and resp.user:
-                                    st.success("Registro exitoso. Revisá tu email para confirmar la cuenta.")
+                                    st.success("Registro exitoso. Revisa tu email para confirmar la cuenta.")
                                 else:
-                                    st.info("Registro creado. Revisá tu email para confirmar.")
+                                    st.info("Registro creado. Revisa tu email para confirmar.")
                             except Exception as e:
                                 st.error(f"Error al registrarse: {e}")
 

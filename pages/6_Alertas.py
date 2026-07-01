@@ -277,7 +277,7 @@ with st.expander("👁️ Mi watchlist — propiedades vigiladas", expanded=Fals
                     save_watchlist(wl)
                     st.rerun()
         else:
-            st.caption("Ninguno. Podés vigilar barrios completos.")
+            st.caption("Ninguno. Puedes vigilar barrios completos.")
 
         # Add barrio input
         all_barrios = sorted(props["barrio"].unique())
