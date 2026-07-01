@@ -95,8 +95,8 @@ def get_dataset_stats(user_plan: str = "Starter") -> dict:
             "fuente": "Idealista API (tiempo real)",
         }
     with get_conn_ro() as conn:
-        total = pd.read_sql("SELECT COUNT(*) as c FROM vista_oportunidades_ai", conn)["c"].iloc[0]
-        barrios = pd.read_sql("SELECT COUNT(DISTINCT barrio) as c FROM vista_oportunidades_ai", conn)["c"].iloc[0]
+        total = pd.read_sql("SELECT COUNT(*) as c FROM oportunidades", conn)["c"].iloc[0]
+        barrios = pd.read_sql("SELECT COUNT(DISTINCT barrio) as c FROM oportunidades", conn)["c"].iloc[0]
         distritos = pd.read_sql("SELECT COUNT(*) as c FROM mapas_distritos", conn)["c"].iloc[0]
         eventos = pd.read_sql("SELECT COUNT(*) as c FROM events", conn)["c"].iloc[0]
     return {

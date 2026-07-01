@@ -15,12 +15,12 @@ def get_dashboard_kpis() -> dict:
                     (precio_m2_barrio * metros - precio_total)
                     / NULLIF(precio_total, 0) * 100
                 ), 2)                                             AS avg_rent
-            FROM vista_oportunidades_ai
+            FROM oportunidades
         """, conn)
 
         df_opp = pd.read_sql("""
             SELECT COUNT(*) AS oportunidades
-            FROM vista_oportunidades_ai
+            FROM oportunidades
             WHERE opportunity_score >= 70
         """, conn)
 
@@ -50,7 +50,7 @@ def get_decision_distribution() -> pd.DataFrame:
                     ELSE 'DESCARTAR'
                 END AS decision,
                 COUNT(*) AS count
-            FROM vista_oportunidades_ai
+            FROM oportunidades
             GROUP BY decision
             ORDER BY count DESC
         """, conn)
@@ -59,7 +59,7 @@ def get_decision_distribution() -> pd.DataFrame:
 def get_score_distribution() -> pd.DataFrame:
     with get_conn_ro() as conn:
         return pd.read_sql(
-            "SELECT opportunity_score FROM vista_oportunidades_ai", conn
+            "SELECT opportunity_score FROM oportunidades", conn
         )
 
 
@@ -128,24 +128,43 @@ def get_top_opportunities(limit: int = 50) -> pd.DataFrame:
     if user_plan in ("Pro", "Enterprise"):
         from utils.datasource_provider import get_properties_for_user
         return get_properties_for_user(user_plan, limit=limit)
+    return _query_oportunidades(limit=limit)
+
+
+_DESCUENTO_SQL = """
+    ROUND(
+        CASE
+            WHEN o.precio_m2_barrio IS NOT NULL AND o.precio_m2_barrio != 0
+            THEN (o.precio_m2_barrio - o.precio_m2) * 100.0 / o.precio_m2_barrio
+            ELSE NULL
+        END
+    , 2) AS descuento_pct
+"""
+
+
+def _query_oportunidades(limit: int = 100, barrio: str | None = None) -> pd.DataFrame:
     with get_conn_ro() as conn:
-        return pd.read_sql("""
-            SELECT *
-            FROM vista_oportunidades_ai
+        if barrio:
+            sql = f"""
+                SELECT o.*, {_DESCUENTO_SQL}
+                FROM oportunidades o
+                WHERE barrio = ?
+                ORDER BY opportunity_score DESC
+            """
+            return pd.read_sql(sql, conn, params=(barrio,))
+        sql = f"""
+            SELECT o.*, {_DESCUENTO_SQL}
+            FROM oportunidades o
             ORDER BY opportunity_score DESC
             LIMIT ?
-        """, conn, params=(limit,))
+        """
+        return pd.read_sql(sql, conn, params=(limit,))
 
 
 def get_barrio_avg_scores(barrio: str, perfil: dict) -> dict:
     from utils.profiles import compute_score_with_profile
 
-    with get_conn_ro() as conn:
-        df = pd.read_sql("""
-            SELECT *
-            FROM vista_oportunidades_ai
-            WHERE barrio = ?
-        """, conn, params=(barrio,))
+    df = _query_oportunidades(barrio=barrio)
 
     if df.empty:
         return {}

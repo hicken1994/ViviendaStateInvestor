@@ -6,6 +6,16 @@ from utils.images import add_images
 
 logger = logging.getLogger(__name__)
 
+_DESCUENTO_SQL = """
+    ROUND(
+        CASE
+            WHEN o.precio_m2_barrio IS NOT NULL AND o.precio_m2_barrio != 0
+            THEN (o.precio_m2_barrio - o.precio_m2) * 100.0 / o.precio_m2_barrio
+            ELSE NULL
+        END
+    , 2) AS descuento_pct
+"""
+
 
 def get_properties_for_user(
     user_plan: str,
@@ -23,11 +33,12 @@ def _idealista_available() -> bool:
 
 def _get_synthetic_properties(limit: int = 100) -> pd.DataFrame:
     with get_conn_ro() as conn:
-        df = pd.read_sql(
-            "SELECT * FROM vista_oportunidades_ai ORDER BY opportunity_score DESC LIMIT ?",
-            conn,
-            params=(limit,),
-        )
+        df = pd.read_sql(f"""
+            SELECT o.*, {_DESCUENTO_SQL}
+            FROM oportunidades o
+            ORDER BY opportunity_score DESC
+            LIMIT ?
+        """, conn, params=(limit,))
     return df
 
 
@@ -67,7 +78,7 @@ def get_total_property_count(user_plan: str) -> int:
 
 def _get_synthetic_count() -> int:
     with get_conn_ro() as conn:
-        row = conn.execute("SELECT COUNT(*) FROM vista_oportunidades_ai").fetchone()
+        row = conn.execute("SELECT COUNT(*) FROM oportunidades").fetchone()
         return row[0] if row else 0
 
 
@@ -90,7 +101,7 @@ def get_all_barrios(user_plan: str) -> list[str]:
 def _get_synthetic_barrios() -> list[str]:
     with get_conn_ro() as conn:
         rows = conn.execute(
-            "SELECT DISTINCT barrio FROM vista_oportunidades_ai ORDER BY barrio"
+            "SELECT DISTINCT barrio FROM oportunidades ORDER BY barrio"
         ).fetchall()
         return [r[0] for r in rows]
 
