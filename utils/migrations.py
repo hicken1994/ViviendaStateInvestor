@@ -155,3 +155,56 @@ def migration_005(conn: sqlite3.Connection):
                 , 2) AS descuento_pct
             FROM oportunidades o
         """)
+
+
+@_migration(6, "Crear tablas principales si el seed no las proveyó")
+def migration_006(conn: sqlite3.Connection):
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS oportunidades (
+            propiedad_id INTEGER,
+            barrio TEXT,
+            metros REAL,
+            precio_m2 REAL,
+            precio_m2_barrio REAL,
+            diferencia_pct REAL,
+            opportunity_score REAL,
+            precio_total REAL,
+            score_descuento REAL,
+            score_precio REAL,
+            score_liquidez REAL,
+            score_tamano REAL,
+            rentabilidad_estimada REAL,
+            decision TEXT,
+            is_premium INTEGER DEFAULT 0
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS mapas_distritos (
+            distrito TEXT PRIMARY KEY,
+            latitud REAL,
+            longitud REAL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS distrito_mapping (
+            distrito_raw TEXT,
+            distrito_mapa TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS radar_oportunidades (
+            barrio TEXT PRIMARY KEY,
+            oportunidades INTEGER,
+            descuento_medio REAL,
+            precio_m2_medio REAL,
+            opportunity_index REAL
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS property_history (
+            property_id TEXT,
+            precio_total REAL,
+            rentabilidad REAL,
+            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
