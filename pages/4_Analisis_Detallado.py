@@ -37,7 +37,7 @@ df = get_top_opportunities(300)
 
 with st.sidebar:
     st.markdown("### 📊 Simulación")
-    if st.button("📊 Simular cambios de mercado", key="sim_copilot", use_container_width=True):
+    if st.button("📊 Simular cambios de mercado", key="sim_copilot", width="stretch"):
         df_sim = simulate_market(df.copy())
         st.session_state["copilot_simulated"] = df_sim.to_dict("records")
         st.rerun()
@@ -45,7 +45,7 @@ with st.sidebar:
 if "copilot_simulated" in st.session_state:
     df = pd.DataFrame(st.session_state["copilot_simulated"])
     st.sidebar.success("📊 Simulación activa")
-    if st.sidebar.button("🔄 Resetear datos", key="reset_copilot", use_container_width=True):
+    if st.sidebar.button("🔄 Resetear datos", key="reset_copilot", width="stretch"):
         st.session_state.pop("copilot_simulated", None)
         st.rerun()
 
@@ -70,7 +70,7 @@ with col_mode:
         horizontal=True, label_visibility="collapsed",
     )
 with col_clear:
-    if st.button("🧹 Limpiar", use_container_width=True):
+    if st.button("🧹 Limpiar", width="stretch"):
         st.session_state.pop("copilot_property", None)
         st.rerun()
 
@@ -167,7 +167,7 @@ if mode == "📈 Mercado":
 
     # ── Scatter plot ──
     fig = render_scatter(df)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # ── Eventos recientes ──
     with st.expander("📡 Actividad reciente del mercado", expanded=False):
@@ -217,7 +217,7 @@ if mode == "📈 Mercado":
         with col_o:
             st.write(f"💸 Oferta: **{target:,} €**")
         with col_a:
-            if st.button("Analizar →", key=f"deal_{idx}", use_container_width=True):
+            if st.button("Analizar →", key=f"deal_{idx}", width="stretch"):
                 st.session_state.selected_property = row.to_dict()
                 st.switch_page("pages/3_propiedad.py")
 
@@ -240,7 +240,7 @@ if mode == "📈 Mercado":
         for col in scoring_df.select_dtypes(include="number").columns:
             scoring_df[col] = scoring_df[col].round(2)
 
-        st.dataframe(scoring_df, use_container_width=True)
+        st.dataframe(scoring_df, width="stretch")
 
 
 # ============================================================
@@ -257,7 +257,7 @@ else:
     col_img, col_head = st.columns([1, 2])
     with col_img:
         if prop.get("image_url"):
-            st.image(prop["image_url"], use_container_width=True)
+            st.image(prop["image_url"], width="stretch")
 
     with col_head:
         st.markdown(f"## 📍 {prop.get('barrio', 'Sin barrio')}")
@@ -310,7 +310,7 @@ else:
     st.caption("Cómo se compara esta propiedad con el resto de oportunidades.")
 
     fig = render_scatter(df, highlight_prop=prop)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     # ── Scoring breakdown ──
     if perfil.get("mostrar_detalle_scoring"):
@@ -335,7 +335,7 @@ else:
     st.markdown("### 🤖 Análisis con IA")
     st.caption("Genera una estrategia de compra personalizada para esta propiedad.")
 
-    if st.button("🤖 Generar análisis", type="primary", use_container_width=True):
+    if st.button("🤖 Generar análisis", type="primary", width="stretch"):
 
         api_key = None
         try:

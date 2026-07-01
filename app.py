@@ -123,7 +123,7 @@ if user is None:
             with st.form("login_form"):
                 email = st.text_input("Email", placeholder="tu@email.com", key="login_email")
                 password = st.text_input("Contraseña", type="password", placeholder="••••••••", key="login_pass")
-                submitted = st.form_submit_button("Iniciar Sesión", type="primary", use_container_width=True)
+                submitted = st.form_submit_button("Iniciar Sesión", type="primary", width="stretch")
                 if submitted:
                     if not email or not password:
                         st.error("Completa todos los campos")
@@ -143,7 +143,7 @@ if user is None:
                 email = st.text_input("Email", placeholder="tu@email.com", key="signup_email")
                 password = st.text_input("Contraseña", type="password", placeholder="••••••••", key="signup_pass")
                 confirm = st.text_input("Confirmar contraseña", type="password", placeholder="••••••••", key="signup_confirm")
-                submitted = st.form_submit_button("Crear Cuenta", type="primary", use_container_width=True)
+                submitted = st.form_submit_button("Crear Cuenta", type="primary", width="stretch")
                 if submitted:
                     if not email or not password:
                         st.error("Completa todos los campos")
@@ -257,7 +257,7 @@ st.sidebar.caption("Madrid Investment Intelligence")
 
 if user:
     st.sidebar.markdown(f"👤 {user.email}")
-    if st.sidebar.button("🚪 Cerrar sesión", use_container_width=True):
+    if st.sidebar.button("🚪 Cerrar sesión", width="stretch"):
         sign_out()
 
 st.sidebar.markdown("---")
@@ -411,7 +411,7 @@ with col_ch1:
         yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
         hovermode="x unified",
     )
-    st.plotly_chart(fig_hist, use_container_width=True)
+    st.plotly_chart(fig_hist, width="stretch")
 
 with col_ch2:
     df_barrios_top = get_top_barrios(limit=10)
@@ -442,7 +442,7 @@ with col_ch2:
         coloraxis_showscale=False,
         hovermode="y unified",
     )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    st.plotly_chart(fig_bar, width="stretch")
 
 st.divider()
 
@@ -482,7 +482,7 @@ with col_a1:
         font_color="white",
         showlegend=False,
     )
-    st.plotly_chart(fig_pie, use_container_width=True)
+    st.plotly_chart(fig_pie, width="stretch")
 
 with col_a2:
     st.markdown("#### 🚨 Eventos Recientes")
@@ -533,19 +533,19 @@ col_n1, col_n2, col_n3 = st.columns(3)
 with col_n1:
     st.markdown("#### 📡 Radar")
     st.caption("Detecta las mejores oportunidades del mercado en tiempo real.")
-    if st.button("Abrir Radar", use_container_width=True, type="primary"):
+    if st.button("Abrir Radar", width="stretch", type="primary"):
         st.switch_page("pages/1_Radar.py")
 
 with col_n2:
     st.markdown("#### 🗺️ Mapa")
     st.caption("Visualiza oportunidades por zona y compara barrios.")
-    if st.button("Abrir Mapa", use_container_width=True):
+    if st.button("Abrir Mapa", width="stretch"):
         st.switch_page("pages/2_Mapa.py")
 
 with col_n3:
     st.markdown("#### ⚖️ Comparador")
     st.caption("Compara 2+ propiedades lado a lado con simulación.")
-    if st.button("Abrir Comparador", use_container_width=True):
+    if st.button("Abrir Comparador", width="stretch"):
         st.switch_page("pages/5_Comparador.py")
 
 col_n4, col_n5, col_n6 = st.columns(3)
@@ -553,19 +553,19 @@ col_n4, col_n5, col_n6 = st.columns(3)
 with col_n4:
     st.markdown("#### 🏠 Propiedad")
     st.caption("Simulación completa de inversión inmobiliaria.")
-    if st.button("Abrir Propiedad", use_container_width=True):
+    if st.button("Abrir Propiedad", width="stretch"):
         st.switch_page("pages/3_propiedad.py")
 
 with col_n5:
     st.markdown("#### 🤖 AI Copilot")
     st.caption("Análisis inteligente y estrategias de compra.")
-    if st.button("Abrir Copilot", use_container_width=True):
+    if st.button("Abrir Copilot", width="stretch"):
         st.switch_page("pages/4_Analisis_Detallado.py")
 
 with col_n6:
     st.markdown("#### 🚨 Alertas")
     st.caption("Eventos de mercado y propiedades vigiladas.")
-    if st.button("Abrir Alertas", use_container_width=True):
+    if st.button("Abrir Alertas", width="stretch"):
         st.switch_page("pages/6_Alertas.py")
 
 st.divider()

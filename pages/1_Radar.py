@@ -46,7 +46,7 @@ if df.empty:
 
 with st.sidebar:
     st.markdown("### 📊 Simulación")
-    if st.button("📊 Simular cambios de mercado", key="sim_radar", use_container_width=True):
+    if st.button("📊 Simular cambios de mercado", key="sim_radar", width="stretch"):
         df_sim = simulate_market(df.copy())
         st.session_state["radar_simulated"] = df_sim.to_dict("records")
         st.rerun()
@@ -54,7 +54,7 @@ with st.sidebar:
 if "radar_simulated" in st.session_state:
     df = pd.DataFrame(st.session_state["radar_simulated"])
     st.sidebar.success("📊 Simulación activa")
-    if st.sidebar.button("🔄 Resetear datos", key="reset_radar", use_container_width=True):
+    if st.sidebar.button("🔄 Resetear datos", key="reset_radar", width="stretch"):
         st.session_state.pop("radar_simulated", None)
         st.rerun()
 
@@ -130,7 +130,7 @@ col_img, col_info = st.columns([1, 2.5])
 
 with col_img:
     if best.get("image_url"):
-        st.image(best["image_url"], use_container_width=True)
+        st.image(best["image_url"], width="stretch")
 
 with col_info:
     st.markdown(f"### {best['barrio']}")
@@ -159,7 +159,7 @@ with col_info:
     trend_icon = "📈" if trend["trend"] == "subiendo" else ("📉" if trend["trend"] == "bajando" else "➡️")
     st.caption(f"Historico 45d: {trend_icon} {trend['change_pct']:+.1f}%  ·  Min: {int(trend['min']):,}€  ·  Max: {int(trend['max']):,}€")
     fig_spark = create_price_history_chart(hist, height=80)
-    st.plotly_chart(fig_spark, use_container_width=True, key="spark_best")
+    st.plotly_chart(fig_spark, width="stretch", key="spark_best")
 
     if st.button("🔍 Ver análisis completo", type="primary", key="best_btn"):
         st.session_state.selected_property = best.to_dict()
@@ -187,7 +187,7 @@ with col_info:
         if st.button(
             "✅ Vigilada" if is_watched else "👁️ Vigilar",
             key="watch_best",
-            use_container_width=True,
+            width="stretch",
         ):
             if is_watched:
                 wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != best_id]
@@ -210,7 +210,7 @@ if barrio_nombre:
                 barrio_name=f"🏙️ Promedio {barrio_nombre}",
                 height=350,
             )
-            st.plotly_chart(fig, use_container_width=True, key="radar_best")
+            st.plotly_chart(fig, width="stretch", key="radar_best")
             st.caption(
                 "Comparación del perfil de puntuación de esta propiedad "
                 "vs. el promedio del barrio. Cada eje es una dimensión de inversión."
@@ -236,7 +236,7 @@ for idx in range(0, len(top5), 3):
         with col:
             with st.container():
                 if row.get("image_url"):
-                    st.image(row["image_url"], use_container_width=True)
+                    st.image(row["image_url"], width="stretch")
 
                 score_val = row["score_total"]
                 rent_val = row.get("rentabilidad_estimada", 0)
@@ -269,7 +269,7 @@ for idx in range(0, len(top5), 3):
                 if st.button(
                     "Analizar →",
                     key=f"top_{idx}_{row.name}",
-                    use_container_width=True,
+                    width="stretch",
                 ):
                     st.session_state.selected_property = row.to_dict()
                     st.switch_page("pages/3_propiedad.py")
@@ -298,16 +298,16 @@ for idx in range(0, len(top5), 3):
                     if st.button(
                         "✅" if is_watched else "👁️",
                         key=f"watch_{r_name}",
-                        use_container_width=True,
+                        width="stretch",
                         help="Quitar de vigiladas" if is_watched else "Vigilar propiedad",
                     ):
-                    if is_watched:
-                        wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != row_id]
-                    else:
-                        wl["propiedades"].append(row_id)
-                    st.session_state.watchlist = wl
-                    save_watchlist(wl)
-                    st.rerun()
+                        if is_watched:
+                            wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != row_id]
+                        else:
+                            wl["propiedades"].append(row_id)
+                        st.session_state.watchlist = wl
+                        save_watchlist(wl)
+                        st.rerun()
 
 st.divider()
 
@@ -317,7 +317,7 @@ if len(st.session_state.get("selected_for_compare", [])) >= 2:
     with cols_btn[1]:
         if st.button(
             f"🔄 Comparar {len(st.session_state.selected_for_compare)} seleccionadas",
-            type="primary", use_container_width=True, key="cmp_grid_btn",
+            type="primary", width="stretch", key="cmp_grid_btn",
         ):
             selected_props = []
             prop_names = []
@@ -357,7 +357,7 @@ with st.expander("📊 Ranking completo — Top 20", expanded=False):
 
     st.dataframe(
         display_df,
-        use_container_width=True,
+        width="stretch",
         column_config={
             "Precio (€)": st.column_config.NumberColumn(format="%d €"),
             "Score Total": st.column_config.ProgressColumn(
@@ -416,7 +416,7 @@ if perfil.get("mostrar_detalle_scoring"):
         for col in scoring_df.select_dtypes(include="number").columns:
             scoring_df[col] = scoring_df[col].round(2)
 
-        st.dataframe(scoring_df, use_container_width=True)
+        st.dataframe(scoring_df, width="stretch")
 
         st.markdown("##### 📡 Perfil visual — Top 3")
         top3 = df.head(3)
@@ -433,7 +433,7 @@ if perfil.get("mostrar_detalle_scoring"):
                         barrio_name=f"Promedio {barrio_name}",
                         height=280,
                     )
-                    st.plotly_chart(fig, use_container_width=True, key=f"radar_top3_{i}")
+                    st.plotly_chart(fig, width="stretch", key=f"radar_top3_{i}")
 
 st.divider()
 

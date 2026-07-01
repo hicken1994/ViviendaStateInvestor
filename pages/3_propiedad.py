@@ -35,7 +35,7 @@ if "selected_property" not in st.session_state:
 prop = st.session_state.selected_property
 
 if prop.get("image_url"):
-    st.image(prop["image_url"], use_container_width=True)
+    st.image(prop["image_url"], width="stretch")
 
 precio = prop.get("precio_total", 0)
 metros = prop.get("metros", 0)
@@ -86,7 +86,7 @@ with nav_col2:
     if st.button(
         "✅ Vigilada" if is_watched else "👁️ Vigilar propiedad",
         key="watch_detail",
-        use_container_width=True,
+        width="stretch",
     ):
         if is_watched:
             wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != prop_id]
@@ -116,7 +116,7 @@ if precio > 0 and prop.get("propiedad_id"):
         f"Media: {int(trend['avg']):,}€"
     )
     fig_hist = create_price_history_chart(hist, height=200, show_xaxis=True)
-    st.plotly_chart(fig_hist, use_container_width=True, key="hist_detail")
+    st.plotly_chart(fig_hist, width="stretch", key="hist_detail")
 
 # ========================
 # SIMULACIÓN
@@ -246,7 +246,7 @@ if perfil.get("mostrar_detalle_scoring"):
                 barrio_name=f"🏙️ Promedio {barrio_nombre}",
                 height=380,
             )
-            st.plotly_chart(fig, use_container_width=True, key="radar_detalle")
+            st.plotly_chart(fig, width="stretch", key="radar_detalle")
 
 # ========================
 # UX → SIGUIENTE PASO

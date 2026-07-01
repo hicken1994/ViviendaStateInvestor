@@ -243,7 +243,7 @@ col_prev, col_action = st.columns([3, 1])
 
 with col_prev:
     if selected_row.get("image_url"):
-        st.image(selected_row["image_url"], use_container_width=True)
+        st.image(selected_row["image_url"], width="stretch")
     st.markdown(
         f"**{selected_row['barrio']}** · 💰 {selected_row['precio_total']:,} € · "
         f"📊 Score {selected_row['score_total']} · 📈 {selected_row['rentabilidad_estimada']}%"
@@ -252,7 +252,7 @@ with col_prev:
 with col_action:
     st.markdown("")
     st.markdown("")
-    if st.button("🔍 Ver análisis completo", use_container_width=True, type="primary"):
+    if st.button("🔍 Ver análisis completo", width="stretch", type="primary"):
         st.session_state.selected_property = selected_row.to_dict()
         st.switch_page("pages/3_propiedad.py")
 
@@ -290,7 +290,7 @@ if not premium_df.empty:
     for _, opp in premium_df.iterrows():
         st.markdown(f"### {opp['barrio']}")
         if opp.get("image_url"):
-            st.image(opp["image_url"], use_container_width=True)
+            st.image(opp["image_url"], width="stretch")
         st.write(f"💰 Precio: **{int(opp['precio_total']):,} €**")
         st.write(f"📊 Score: **{opp['score_total']}**")
         st.write(f"📈 Rentabilidad estimada: **{opp['rentabilidad_estimada']}%**")

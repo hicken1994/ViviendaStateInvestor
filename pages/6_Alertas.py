@@ -298,6 +298,6 @@ st.divider()
 # NAV
 # ========================
 
-st.button("← Volver al Radar", use_container_width=True, on_click=lambda: st.switch_page("pages/1_Radar.py"))
+st.button("← Volver al Radar", width="stretch", on_click=lambda: st.switch_page("pages/1_Radar.py"))
 
 render_footer(show_sources=False, show_disclaimer=True)

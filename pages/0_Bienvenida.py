@@ -95,7 +95,7 @@ with col_b2:
     st.markdown(
         "¿Listo para empezar a invertir de forma inteligente?"
     )
-    if st.button("🚀 Ir al Dashboard", type="primary", use_container_width=True):
+    if st.button("🚀 Ir al Dashboard", type="primary", width="stretch"):
         save_tour_completed()
         st.switch_page("app.py")
 

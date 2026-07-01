@@ -64,7 +64,7 @@ card_cols = st.columns(len(props))
 for i, (prop, name) in enumerate(zip(props, names)):
     with card_cols[i]:
         if prop.get("image_url"):
-            st.image(prop["image_url"], use_container_width=True)
+            st.image(prop["image_url"], width="stretch")
 
         st.markdown(f"### {name}")
 
@@ -104,7 +104,7 @@ fig = create_comparison_radar(
     property_names=names,
     height=450,
 )
-st.plotly_chart(fig, use_container_width=True, key="cmp_radar")
+st.plotly_chart(fig, width="stretch", key="cmp_radar")
 
 
 st.divider()
@@ -137,7 +137,7 @@ for prop, name in zip(props, names):
 cmp_df = pd.DataFrame(cmp_rows)
 st.dataframe(
     cmp_df,
-    use_container_width=True,
+    width="stretch",
     column_config={
         "Precio (€)": st.column_config.NumberColumn(format="%d €"),
         "Score": st.column_config.NumberColumn(format="%.1f"),
@@ -279,6 +279,6 @@ if best_prop_idx is not None:
 
 col_reset_1, col_reset_2, col_reset_3 = st.columns([1, 1, 1])
 with col_reset_2:
-    if st.button("🔄 Nueva comparación", type="secondary", use_container_width=True):
+    if st.button("🔄 Nueva comparación", type="secondary", width="stretch"):
         st.session_state.selected_for_compare = []
         st.switch_page("pages/1_Radar.py")
