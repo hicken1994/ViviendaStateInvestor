@@ -15,15 +15,18 @@ def get_user_id():
 def load_preferences() -> dict:
     user_id = get_user_id()
     if not user_id:
-        return {"perfil_inversion": "intermedio"}
+        return {"perfil_inversion": "intermedio", "tour_completed": False}
     try:
         supabase = _get_client()
-        result = supabase.table("user_preferences").select("perfil_inversion").eq("user_id", user_id).maybe_single().execute()
+        result = supabase.table("user_preferences").select("*").eq("user_id", user_id).maybe_single().execute()
         if result.data:
-            return result.data
+            return {
+                "perfil_inversion": result.data.get("perfil_inversion", "intermedio"),
+                "tour_completed": result.data.get("tour_completed", False),
+            }
     except Exception as e:
         logger.warning(f"Error loading preferences: {e}")
-    return {"perfil_inversion": "intermedio"}
+    return {"perfil_inversion": "intermedio", "tour_completed": False}
 
 
 def save_preference(key: str, value: str):
