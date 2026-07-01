@@ -8,9 +8,11 @@ from utils.tooltips import tooltip_help
 from utils.profiles import get_perfil, compute_score_with_profile
 import json
 from utils.auth import require_auth
+from utils.plan_gate import render_feature_gate
 
 
 require_auth()
+render_feature_gate("ai_copilot", "AI Copilot")
 
 # ========================
 # PERFIL

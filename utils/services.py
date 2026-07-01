@@ -1,3 +1,4 @@
+import streamlit as st
 import pandas as pd
 from utils.connection import get_conn_ro
 from utils.cache import cached
@@ -120,6 +121,13 @@ def get_barrio_rent(barrio: str, default: float = 20) -> float:
 
 @cached(ttl=30)
 def get_top_opportunities(limit: int = 50) -> pd.DataFrame:
+    user_plan = "Starter"
+    if "supabase_session" in st.session_state:
+        from utils.user_store import load_preferences
+        user_plan = load_preferences().get("plan", "Starter")
+    if user_plan in ("Pro", "Enterprise"):
+        from utils.datasource_provider import get_properties_for_user
+        return get_properties_for_user(user_plan, limit=limit)
     with get_conn_ro() as conn:
         return pd.read_sql("""
             SELECT *
@@ -154,10 +162,3 @@ def get_barrio_avg_scores(barrio: str, perfil: dict) -> dict:
     available = [c for c in score_cols if c in profile_metrics.columns]
     averages = profile_metrics[available].mean().to_dict()
     return {k: round(v, 2) for k, v in averages.items()}
-    with get_conn_ro() as conn:
-        return pd.read_sql("""
-            SELECT *
-            FROM vista_oportunidades_ai
-            ORDER BY opportunity_score DESC
-            LIMIT ?
-        """, conn, params=(limit,))

@@ -7,6 +7,7 @@ import pandas as pd
 from utils.profiles import get_perfil
 from utils.charts import create_comparison_radar
 from utils.auth import require_auth
+from utils.plan_gate import render_feature_gate
 
 st.set_page_config(
     page_title="Comparador",
@@ -16,6 +17,7 @@ st.set_page_config(
 
 
 require_auth()
+render_feature_gate("comparador", "Comparador de propiedades")
 
 # ========================
 # PERFIL

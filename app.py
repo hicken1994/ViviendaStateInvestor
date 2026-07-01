@@ -256,7 +256,9 @@ st.sidebar.markdown("## 🏠 Vivienda AI")
 st.sidebar.caption("Madrid Investment Intelligence")
 
 if user:
-    st.sidebar.markdown(f"👤 {user.email}")
+    _plan_badge = load_preferences().get("plan", "Starter")
+    _plan_emoji = {"Starter": "🆓", "Pro": "⭐", "Enterprise": "👑"}
+    st.sidebar.markdown(f"👤 {user.email} {_plan_emoji.get(_plan_badge, '')}")
     if st.sidebar.button("⚙️ Mi Cuenta", width="stretch", key="mi_cuenta_sidebar"):
         st.switch_page("pages/7_Mi_Cuenta.py")
     if st.sidebar.button("🚪 Cerrar sesión", width="stretch"):
@@ -297,14 +299,16 @@ perfil = get_perfil(str(perfil_seleccionado))
 st.sidebar.caption(f"_{perfil['descripcion']}_")
 st.sidebar.markdown("---")
 
-stats = get_dataset_stats()
+user_plan = load_preferences().get("plan", "Starter") if user else "Starter"
+stats = get_dataset_stats(user_plan)
 last_event = get_last_event_timestamp()
 
 st.sidebar.markdown("### 📊 Estado del dataset")
 st.sidebar.markdown(
     f"- 🏠 **{stats['propiedades']:,}** propiedades  \n"
     f"- 📍 **{stats['barrios']}** barrios en **{stats['distritos']}** distritos  \n"
-    f"- 🚨 **{stats['eventos']}** eventos registrados"
+    f"- 🚨 **{stats['eventos']}** eventos registrados  \n"
+    f"- 📡 Fuente: {stats.get('fuente', 'sintética')}"
 )
 st.sidebar.caption(
     f"Última actividad: {time_ago(last_event) if last_event else 'sin datos'}"

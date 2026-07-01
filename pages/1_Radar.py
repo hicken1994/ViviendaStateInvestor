@@ -10,6 +10,7 @@ from components.footer import render_footer
 from components.score_help import render_score_breakdown
 from utils.auth import require_auth
 from utils.user_store import save_watchlist
+from utils.plan_gate import check_feature
 
 
 require_auth()
@@ -44,12 +45,19 @@ if df.empty:
     st.warning("No hay datos disponibles")
     st.stop()
 
+from utils.user_store import load_preferences as _lp_radar
+_user_plan_radar = _lp_radar().get("plan", "Starter")
+_is_real_data = _user_plan_radar in ("Pro", "Enterprise")
+
 with st.sidebar:
-    st.markdown("### 📊 Simulación")
-    if st.button("📊 Simular cambios de mercado", key="sim_radar", width="stretch"):
-        df_sim = simulate_market(df.copy())
-        st.session_state["radar_simulated"] = df_sim.to_dict("records")
-        st.rerun()
+    if not _is_real_data:
+        st.markdown("### 📊 Simulación")
+        if st.button("📊 Simular cambios de mercado", key="sim_radar", width="stretch"):
+            df_sim = simulate_market(df.copy())
+            st.session_state["radar_simulated"] = df_sim.to_dict("records")
+            st.rerun()
+    else:
+        st.sidebar.success("📡 Datos en vivo de Idealista")
 
 if "radar_simulated" in st.session_state:
     df = pd.DataFrame(st.session_state["radar_simulated"])
@@ -374,27 +382,30 @@ with st.expander("📊 Ranking completo — Top 20", expanded=False):
 # ========================
 
 with st.expander("📡 Actividad del mercado", expanded=False):
-    events = get_recent_events(10)
-
-    if events.empty:
-        st.info("No se han detectado movimientos recientes en el mercado.")
+    if _is_real_data:
+        st.info("📡 Datos en vivo de Idealista — los eventos de mercado se generan automáticamente con cada actualización.")
     else:
-        for _, e in events.iterrows():
-            etype = e.get("event_type", "")
-            prop_id = e.get("property_id", "—")
-            old_val = e.get("old_value")
-            new_val = e.get("new_value")
+        events = get_recent_events(10)
 
-            if etype == "price_drop":
-                delta = f"de {int(old_val):,}€ a {int(new_val):,}€" if old_val and new_val else ""
-                st.markdown(f"💸 **Bajada de precio** — {prop_id} {delta}")
-            elif etype == "yield_up":
-                delta = f"de {round(old_val, 2)}% a {round(new_val, 2)}%" if old_val and new_val else ""
-                st.markdown(f"📈 **Mejora de rentabilidad** — {prop_id} {delta}")
-            elif etype == "new_listing":
-                st.markdown(f"🆕 **Nueva propiedad** — {prop_id}")
-            else:
-                st.markdown(f"📌 {etype} — {prop_id}")
+        if events.empty:
+            st.info("No se han detectado movimientos recientes en el mercado.")
+        else:
+            for _, e in events.iterrows():
+                etype = e.get("event_type", "")
+                prop_id = e.get("property_id", "—")
+                old_val = e.get("old_value")
+                new_val = e.get("new_value")
+
+                if etype == "price_drop":
+                    delta = f"de {int(old_val):,}€ a {int(new_val):,}€" if old_val and new_val else ""
+                    st.markdown(f"💸 **Bajada de precio** — {prop_id} {delta}")
+                elif etype == "yield_up":
+                    delta = f"de {round(old_val, 2)}% a {round(new_val, 2)}%" if old_val and new_val else ""
+                    st.markdown(f"📈 **Mejora de rentabilidad** — {prop_id} {delta}")
+                elif etype == "new_listing":
+                    st.markdown(f"🆕 **Nueva propiedad** — {prop_id}")
+                else:
+                    st.markdown(f"📌 {etype} — {prop_id}")
 
 
 # ========================

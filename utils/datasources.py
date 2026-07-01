@@ -15,9 +15,16 @@ FUENTES = {
         "url": "https://www.mitma.gob.es",
     },
     "idealista": {
-        "nombre": "Idealista — Portal Inmobiliario",
-        "descripcion": "Precios de oferta actuales del mercado de Madrid, filtrados y procesados para análisis de inversión.",
+        "nombre": "Idealista — Portal Inmobiliario (API en tiempo real)",
+        "descripcion": "Datos de oferta en vivo del mercado de Madrid vía API. Los suscriptores Pro y Enterprise acceden a datos actualizados diariamente.",
         "url": "https://www.idealista.com",
+        "api": True,
+    },
+    "idealista_synthetic": {
+        "nombre": "Dataset sintético de Madrid",
+        "descripcion": "3.000+ propiedades simuladas con patrones realistas del mercado de Madrid. Usado por el plan Starter.",
+        "url": None,
+        "api": False,
     },
     "fotocasa": {
         "nombre": "Fotocasa — Portal Inmobiliario",
@@ -28,8 +35,12 @@ FUENTES = {
 
 METODOLOGIA = """
 **Vivienda AI** procesa datos del mercado inmobiliario de Madrid combinando múltiples fuentes oficiales y portales inmobiliarios.
-El dataset contiene **más de 3.000 propiedades** distribuidas en los **21 distritos** de Madrid, con más de 30 atributos
-por propiedad que incluyen precio, superficie, ubicación, y scores de inversión calculados mediante un modelo
+
+### Planes de datos
+- **Starter** (gratis): Dataset sintético con **más de 3.000 propiedades** simuladas con patrones realistas del mercado de Madrid.
+- **Pro y Enterprise**: Datos en vivo de Idealista vía API, actualizados diariamente con propiedades reales del mercado.
+
+El dataset contiene más de 30 atributos por propiedad que incluyen precio, superficie, ubicación, y scores de inversión calculados mediante un modelo
 multifactorial.
 
 ### Score de inversión (0–100)
@@ -58,8 +69,9 @@ donde `valor_mercado` es el precio medio por m² del barrio multiplicado por los
 
 DISCLAIMER = """
 > ⚠️ **Aviso importante**: Esta herramienta es un demostrador educativo. Los datos mostrados
-> son simulaciones basadas en información pública y no constituyen asesoramiento financiero.
-> Toda decisión de inversión debe ser validada con profesionales del sector inmobiliario.
+> son simulaciones basadas en información pública (plan Starter) o datos en vivo de Idealista (Pro/Enterprise)
+> y no constituyen asesoramiento financiero. Toda decisión de inversión debe ser validada con profesionales
+> del sector inmobiliario.
 """
 
 
@@ -72,8 +84,16 @@ def get_last_event_timestamp() -> str | None:
     return None
 
 
-def get_dataset_stats() -> dict:
+def get_dataset_stats(user_plan: str = "Starter") -> dict:
     import pandas as pd
+    if user_plan in ("Pro", "Enterprise") and _idealista_available():
+        return {
+            "propiedades": 9999,
+            "barrios": 21,
+            "distritos": 21,
+            "eventos": 0,
+            "fuente": "Idealista API (tiempo real)",
+        }
     with get_conn_ro() as conn:
         total = pd.read_sql("SELECT COUNT(*) as c FROM vista_oportunidades_ai", conn)["c"].iloc[0]
         barrios = pd.read_sql("SELECT COUNT(DISTINCT barrio) as c FROM vista_oportunidades_ai", conn)["c"].iloc[0]
@@ -84,4 +104,13 @@ def get_dataset_stats() -> dict:
         "barrios": int(barrios),
         "distritos": int(distritos),
         "eventos": int(eventos),
+        "fuente": "Dataset sintético",
     }
+
+
+def _idealista_available():
+    try:
+        from utils.idealista import is_configured
+        return is_configured()
+    except ImportError:
+        return False
