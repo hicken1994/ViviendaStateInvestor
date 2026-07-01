@@ -55,6 +55,23 @@ def load_watchlist() -> dict:
     return {"propiedades": [], "barrios": []}
 
 
+def is_tour_completed() -> bool:
+    prefs = load_preferences()
+    return prefs.get("tour_completed", False)
+
+
+def save_tour_completed():
+    user_id = get_user_id()
+    if not user_id:
+        return
+    try:
+        supabase = _get_client()
+        data = {"user_id": user_id, "tour_completed": True}
+        supabase.table("user_preferences").upsert(data, on_conflict="user_id").execute()
+    except Exception as e:
+        logger.warning(f"Error saving tour_completed: {e}")
+
+
 def save_watchlist(watchlist: dict):
     user_id = get_user_id()
     if not user_id:

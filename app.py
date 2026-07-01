@@ -19,7 +19,7 @@ from utils.timefmt import time_ago, format_timestamp
 from components.footer import render_footer
 from components.score_help import render_score_legend
 from utils.auth import get_user, sign_in, sign_up, sign_out
-from utils.user_store import load_preferences, save_preference
+from utils.user_store import load_preferences, save_preference, is_tour_completed, save_tour_completed
 
 # ========================
 # ⚙️ CONFIGURACIÓN GENERAL
@@ -35,27 +35,87 @@ st.set_page_config(
 user = get_user()
 
 if user is None:
-    LOGIN_CSS = """
-    <style>
-        .login-container {
-            max-width: 420px;
-            margin: 4rem auto;
-            padding: 2.5rem;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .login-container h1 { color: white; text-align: center; margin-bottom: 0.25rem; }
-        .login-container .subtitle { color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 2rem; font-size: 0.9rem; }
-    </style>
-    """
-    st.markdown(LOGIN_CSS, unsafe_allow_html=True)
+    col_l, col_r = st.columns([1, 1])
+    with col_l:
+        st.markdown("""
+        <div style="padding: 3rem 2rem;">
+            <h1 style="color: white; font-size: 2.8rem; margin-bottom: 0.5rem;">🏠 Vivienda AI</h1>
+            <p style="color: rgba(255,255,255,0.5); font-size: 1.1rem; margin-bottom: 1.5rem;">
+                Madrid Investment Intelligence
+            </p>
+            <p style="color: rgba(255,255,255,0.8); font-size: 1.05rem; line-height: 1.7;">
+                La plataforma que usa inteligencia artificial para detectar <strong>oportunidades de inversión inmobiliaria</strong> en Madrid.
+                Analizamos miles de propiedades en tiempo real y te mostramos las que mejor se ajustan a tu perfil inversor.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown('<div class="login-container">', unsafe_allow_html=True)
-        st.markdown("<h1>🏠 Vivienda AI</h1>", unsafe_allow_html=True)
-        st.markdown('<p class="subtitle">Madrid Investment Intelligence</p>', unsafe_allow_html=True)
+        st.markdown("### ⚡ Características")
+        feats = [
+            ("📡 Radar de oportunidades", "Detecta propiedades infravaloradas con scoring multi-factor"),
+            ("🗺️ Mapa de calor interactivo", "Visualiza concentración de oportunidades por zona"),
+            ("🤖 AI Copilot", "Análisis inteligente y recomendaciones de compra"),
+            ("⚖️ Comparador", "Evaluá 2+ propiedades lado a lado con simulación"),
+            ("🚨 Alertas & Watchlist", "Seguí propiedades y recibí notificaciones de mercado"),
+            ("📊 Dashboard global", "KPIs, tendencias y eventos del mercado madrileño"),
+        ]
+        for icon, desc in feats:
+            st.markdown(f"**{icon}** — {desc}")
+
+    with col_r:
+        st.markdown("""
+        <div style="padding: 3rem 0;">
+            <h2 style="color: white; text-align: center;">⚡ Planes</h2>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_p1, col_p2, col_p3 = st.columns(3)
+        with col_p1:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); padding: 1.5rem; text-align: center; height: 100%;">
+                <h3 style="color: #4ade80; margin-bottom: 0.25rem;">Starter</h3>
+                <p style="font-size: 2rem; color: white; margin: 0.5rem 0;"><strong>Gratis</strong></p>
+                <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">Siempre</p>
+                <hr style="border-color: rgba(255,255,255,0.08); margin: 1rem 0;">
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">50 propiedades/mes</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Radar básico</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Alertas estándar</p>
+                <p style="color: rgba(255,255,255,0.3); font-size: 0.9rem;">✕ Comparador</p>
+                <p style="color: rgba(255,255,255,0.3); font-size: 0.9rem;">✕ AI Copilot</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col_p2:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1a3a2e 0%, #1a2a3e 100%); border-radius: 12px; border: 2px solid #4ade80; padding: 1.5rem; text-align: center; height: 100%; position: relative;">
+                <div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #4ade80; color: #0a0a1a; padding: 2px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;">RECOMENDADO</div>
+                <h3 style="color: #4ade80; margin-bottom: 0.25rem; margin-top: 0.5rem;">Pro</h3>
+                <p style="font-size: 2rem; color: white; margin: 0.5rem 0;"><strong>19€</strong> <span style="font-size: 1rem; color: rgba(255,255,255,0.5);">/mes</span></p>
+                <hr style="border-color: rgba(255,255,255,0.08); margin: 1rem 0;">
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Propiedades ilimitadas</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Radar completo</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Comparador + Watchlist</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">AI Copilot</p>
+                <p style="color: rgba(255,255,255,0.3); font-size: 0.9rem;">✕ API access</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col_p3:
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); padding: 1.5rem; text-align: center; height: 100%;">
+                <h3 style="color: #fbbf24; margin-bottom: 0.25rem;">Enterprise</h3>
+                <p style="font-size: 2rem; color: white; margin: 0.5rem 0;"><strong>49€</strong> <span style="font-size: 1rem; color: rgba(255,255,255,0.5);">/mes</span></p>
+                <hr style="border-color: rgba(255,255,255,0.08); margin: 1rem 0;">
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Todo lo de Pro</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">API de datos en tiempo real</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Datos multi-ciudad</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Soporte prioritario 24/7</p>
+                <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem;">Onboarding personalizado</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.divider()
+        st.markdown("<h3 style='text-align: center; color: white;'>🔐 Accedé a la plataforma</h3>", unsafe_allow_html=True)
 
         tab_login, tab_signup = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
 
@@ -102,7 +162,11 @@ if user is None:
                             except Exception as e:
                                 st.error(f"Error al registrarse: {e}")
 
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.stop()
+
+# Tour redirect for new users
+if not is_tour_completed():
+    st.switch_page("pages/0_Bienvenida.py")
     st.stop()
 
 # ========================
