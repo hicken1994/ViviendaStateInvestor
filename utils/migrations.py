@@ -106,10 +106,14 @@ def migration_002(conn: sqlite3.Connection):
         CREATE INDEX IF NOT EXISTS idx_events_property
         ON events(property_id)
     """)
-    conn.execute("""
-        CREATE INDEX IF NOT EXISTS idx_oportunidades_barrio
-        ON oportunidades(barrio)
-    """)
+    cursor = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='oportunidades'"
+    )
+    if cursor.fetchone() is not None:
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_oportunidades_barrio
+            ON oportunidades(barrio)
+        """)
 
 
 @_migration(3, "Habilitar WAL mode y configuracion")
@@ -154,6 +158,12 @@ def migration_005(conn: sqlite3.Connection):
             rentabilidad_estimada REAL,
             decision TEXT,
             is_premium INTEGER DEFAULT 0
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS barrio_rent (
+            barrio TEXT,
+            precio_m2_alquiler REAL
         )
     """)
     conn.execute("""

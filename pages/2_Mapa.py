@@ -69,6 +69,10 @@ mapping_df = get_distrito_mapping()
 df = add_images(df)
 
 # Scoring con perfil
+if df.empty:
+    st.warning("No hay datos disponibles. Cargá propiedades desde el Radar primero.")
+    st.stop()
+
 profile_metrics = df.apply(
     lambda row: compute_score_with_profile(row, perfil),
     axis=1, result_type="expand",

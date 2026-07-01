@@ -1,3 +1,4 @@
+import sqlite3
 import logging
 import streamlit as st
 import pandas as pd
@@ -7,6 +8,7 @@ from utils.profiles import get_perfil
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 from utils.db import add_is_premium_column
 from utils.migrations import run_migrations
+from utils.seed_data import seed_all as seed_synthetic, get_counts as seed_counts
 from utils.services import get_dashboard_kpis
 from utils.datasources import get_dataset_stats, get_last_event_timestamp, METODOLOGIA
 from utils.timefmt import time_ago
@@ -164,6 +166,26 @@ if not is_tour_completed():
     st.stop()
 
 # ========================
+# FUNCIÓN: seed synthetic si la DB quedó vacía
+# ========================
+
+def _seed_synthetic():
+    try:
+        conn = sqlite3.connect("real_estate.db")
+        cnt = conn.execute("SELECT COUNT(*) FROM oportunidades").fetchone()[0]
+        if cnt == 0:
+            print("DB vacia - generando datos sinteticos...")
+            conn.execute("PRAGMA foreign_keys=OFF")
+            seed_synthetic(conn)
+            for t, c in seed_counts(conn).items():
+                print(f"  {t}: {c} rows")
+            print("Seed sintetico completado")
+        conn.close()
+    except Exception as e:
+        print(f"Error al generar seed sintetico: {e}")
+
+
+# ========================
 # 🛠️ INICIALIZACIÓN DB (UNA SOLA VEZ)
 # ========================
 
@@ -171,6 +193,7 @@ if "db_initialized" not in st.session_state:
     bootstrap_db()
     run_migrations()
     add_is_premium_column()
+    _seed_synthetic()
     st.session_state["db_initialized"] = True
 
 # ========================
