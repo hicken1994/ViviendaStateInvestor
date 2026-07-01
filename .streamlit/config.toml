@@ -2,7 +2,13 @@
 base = "dark"
 
 [server]
-runOnSave = true
+runOnSave = false
+enableStaticServing = false
+maxUploadSize = 0
 
 [browser]
 gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+showErrorDetails = false
