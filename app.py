@@ -7,17 +7,10 @@ from utils.profiles import get_perfil
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 from utils.db import add_is_premium_column
 from utils.migrations import run_migrations
-from utils.services import (
-    get_dashboard_kpis,
-    get_decision_distribution,
-    get_score_distribution,
-    get_top_barrios,
-    get_dashboard_events,
-)
+from utils.services import get_dashboard_kpis
 from utils.datasources import get_dataset_stats, get_last_event_timestamp, METODOLOGIA
-from utils.timefmt import time_ago, format_timestamp
+from utils.timefmt import time_ago
 from components.footer import render_footer
-from components.score_help import render_score_legend
 from utils.auth import get_user, sign_in, sign_up, sign_out
 from utils.user_store import load_preferences, save_preference, is_tour_completed, save_tour_completed
 
@@ -227,24 +220,7 @@ st.markdown("""
         max-height: 320px;
     }
 
-    /* Dashboard KPI cards */
-    .kpi-card {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        padding: 1rem;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-        text-align: center;
-    }
 
-    /* Event feed */
-    .event-item {
-        padding: 0.4rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.06);
-        font-size: 0.85rem;
-    }
-    .event-item:last-child {
-        border-bottom: none;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -303,327 +279,148 @@ user_plan = load_preferences().get("plan", "Starter") if user else "Starter"
 stats = get_dataset_stats(user_plan)
 last_event = get_last_event_timestamp()
 
-st.sidebar.markdown("### 📊 Estado del dataset")
-st.sidebar.markdown(
-    f"- 🏠 **{stats['propiedades']:,}** propiedades  \n"
-    f"- 📍 **{stats['barrios']}** barrios en **{stats['distritos']}** distritos  \n"
-    f"- 🚨 **{stats['eventos']}** eventos registrados  \n"
-    f"- 📡 Fuente: {stats.get('fuente', 'sintética')}"
-)
-st.sidebar.caption(
-    f"Última actividad: {time_ago(last_event) if last_event else 'sin datos'}"
-)
+with st.sidebar.expander("📊 Estado del dataset", expanded=False):
+    st.markdown(
+        f"- 🏠 **{stats['propiedades']:,}** propiedades  \n"
+        f"- 📍 **{stats['barrios']}** barrios  \n"
+        f"- 🚨 **{stats['eventos']}** eventos  \n"
+        f"- 📡 {stats.get('fuente', 'sintética')}"
+    )
+    st.caption(f"Última actividad: {time_ago(last_event) if last_event else 'sin datos'}")
 st.sidebar.markdown("---")
 
 # ========================
-# 📊 FUNCIONES DEL DASHBOARD
+# 🧭 NAVEGACIÓN PRINCIPAL
 # ========================
 
-def format_price(price):
-    """Formatea precio al estilo 245K € / 1.25M €"""
-    if price >= 1_000_000:
-        return f"{price / 1_000_000:.2f}M €"
-    elif price >= 1_000:
-        return f"{price / 1_000:.0f}K €"
-    return f"{price:,.0f} €"
-
-
-def format_pct(val):
-    """Formatea porcentaje con 1 decimal: 8.5%"""
-    return f"{val:.1f}%"
-
-
-# Las funciones get_dashboard_kpis, get_decision_distribution,
-# get_score_distribution, get_top_barrios y get_dashboard_events
-# ahora viven en utils/services.py
-
-
-EVENT_EMOJIS = {
-    "price_drop": "💸 Bajada de precio",
-    "yield_up":   "📈 Subida de rentabilidad",
-}
-
-# ========================
-# DASHBOARD — HEADER
-# ========================
-
-st.markdown("# 🏠 Vivienda AI — Dashboard")
-st.markdown("#### Inteligencia artificial aplicada a la inversión inmobiliaria en Madrid")
-
-st.markdown(f"""
-> **Perfil activo:** {perfil['nombre']} — _{perfil['descripcion']}_
-""")
-
-# ========================
-# DASHBOARD — KPIs GLOBALES
-# ========================
+st.markdown(
+    f"<div style='margin-bottom: 1.5rem;'>"
+    f"<h1 style='color: white; font-size: 1.8rem; margin-bottom: 0.25rem;'>🏠 ¿Qué quieres hacer hoy?</h1>"
+    f"<p style='color: rgba(255,255,255,0.5);'>Perfil activo: {perfil['nombre']} — {perfil['descripcion']}</p>"
+    f"</div>",
+    unsafe_allow_html=True,
+)
 
 kpis = get_dashboard_kpis()
 
-col_k1, col_k2, col_k3, col_k4, col_k5, col_k6 = st.columns(6)
-
-with col_k1:
-    st.metric("🏠 Propiedades", f"{kpis['total_props']:,}")
-
-with col_k2:
-    st.metric("⭐ Score medio", f"{kpis['avg_score']:.1f}")
-
-with col_k3:
-    st.metric("🎯 Oportunidades", f"{kpis['oportunidades']:,}")
-
-with col_k4:
-    st.metric("💰 Precio medio", format_price(kpis['avg_price']))
-
-with col_k5:
-    st.metric("📈 Rent. media", format_pct(kpis['avg_rent']))
-
-with col_k6:
-    st.metric("🚨 Eventos (7d)", f"{kpis['recent_events']}")
-
-st.divider()
-
-# ========================
-# DASHBOARD — GRÁFICOS
-# ========================
-
-col_ch1, col_ch2 = st.columns(2)
-
-with col_ch1:
-    df_scores = get_score_distribution()
-    mean_score = df_scores["opportunity_score"].mean()
-
-    fig_hist = px.histogram(
-        df_scores,
-        x="opportunity_score",
-        nbins=30,
-        title="📊 Distribución de Scores",
-        color_discrete_sequence=["#1f77b4"],
-        labels={"opportunity_score": "Opportunity Score"},
-    )
-    fig_hist.add_vline(
-        x=mean_score,
-        line_dash="dash",
-        line_color="#d4a017",
-        annotation_text=f"Media: {mean_score:.1f}",
-        annotation_position="top right",
-    )
-    fig_hist.update_layout(
-        height=380,
-        margin=dict(l=10, r=10, t=40, b=30),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
-        hovermode="x unified",
-    )
-    st.plotly_chart(fig_hist, width="stretch")
-
-with col_ch2:
-    df_barrios_top = get_top_barrios(limit=10)
-
-    fig_bar = px.bar(
-        df_barrios_top,
-        y="barrio",
-        x="opportunity_index",
-        title="🏘️ Top Barrios por Índice de Oportunidad",
-        orientation="h",
-        text="opportunity_index",
-        color="opportunity_index",
-        color_continuous_scale="Blues",
-        labels={"barrio": "", "opportunity_index": "Índice"},
-    )
-    fig_bar.update_traces(
-        texttemplate="%{text:.1f}",
-        textposition="outside",
-    )
-    fig_bar.update_layout(
-        height=380,
-        margin=dict(l=10, r=10, t=40, b=30),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        yaxis=dict(autorange="reversed", showgrid=False),
-        xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
-        coloraxis_showscale=False,
-        hovermode="y unified",
-    )
-    st.plotly_chart(fig_bar, width="stretch")
-
-st.divider()
-
-# ========================
-# DASHBOARD — ANÁLISIS
-# ========================
-
-col_a1, col_a2 = st.columns(2)
-
-with col_a1:
-    # Pie chart de decisiones
-    df_decisions = get_decision_distribution()
-
-    color_map = {
-        "COMPRAR":   "#00c853",
-        "NEGOCIAR":  "#ffc107",
-        "DESCARTAR": "#ff5252",
+st.markdown("""
+<style>
+    .nav-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 1.5rem;
+        height: 100%;
+        transition: all 0.2s;
+        cursor: pointer;
     }
-    fig_pie = px.pie(
-        df_decisions,
-        names="decision",
-        values="count",
-        title="🎯 Distribución de Decisiones",
-        color="decision",
-        color_discrete_map=color_map,
+    .nav-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(74,222,128,0.3);
+        box-shadow: 0 8px 24px rgba(74,222,128,0.1);
+    }
+    .nav-card-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .nav-card-title { color: white; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .nav-card-desc { color: rgba(255,255,255,0.5); font-size: 0.85rem; line-height: 1.4; }
+    .mini-kpi {
+        background: rgba(255,255,255,0.04);
+        border-radius: 10px;
+        padding: 0.6rem 0.8rem;
+        text-align: center;
+    }
+    .mini-kpi-value { color: white; font-size: 1.2rem; font-weight: 700; }
+    .mini-kpi-label { color: rgba(255,255,255,0.4); font-size: 0.75rem; }
+</style>
+""", unsafe_allow_html=True)
+
+# Mini KPIs compactos
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.markdown(
+        f"<div class='mini-kpi'><div class='mini-kpi-value'>{kpis['total_props']:,}</div>"
+        f"<div class='mini-kpi-label'>🏠 Propiedades</div></div>",
+        unsafe_allow_html=True,
     )
-    fig_pie.update_traces(
-        textposition="inside",
-        textinfo="label+percent",
-        hole=0.4,
-        marker=dict(line=dict(color="rgba(0,0,0,0.3)", width=1)),
+with c2:
+    st.markdown(
+        f"<div class='mini-kpi'><div class='mini-kpi-value'>{kpis['avg_score']:.1f}</div>"
+        f"<div class='mini-kpi-label'>⭐ Score medio</div></div>",
+        unsafe_allow_html=True,
     )
-    fig_pie.update_layout(
-        height=350,
-        margin=dict(l=10, r=10, t=40, b=10),
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_color="white",
-        showlegend=False,
+with c3:
+    st.markdown(
+        f"<div class='mini-kpi'><div class='mini-kpi-value'>{kpis['oportunidades']:,}</div>"
+        f"<div class='mini-kpi-label'>🎯 Oportunidades</div></div>",
+        unsafe_allow_html=True,
     )
-    st.plotly_chart(fig_pie, width="stretch")
 
-with col_a2:
-    st.markdown("#### 🚨 Eventos Recientes")
+st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
-    df_events = get_dashboard_events(limit=5)
+# TARJETAS DE NAVEGACIÓN
+nav_items = [
+    ("📡", "Radar", "Encontrá oportunidades con scoring inteligente", "pages/1_Radar.py"),
+    ("🗺️", "Mapa", "Explorá oportunidades por zona", "pages/2_Mapa.py"),
+    ("🏠", "Propiedad", "Simulá una inversión completa", "pages/3_propiedad.py"),
+    ("🤖", "AI Copilot", "Analizá con inteligencia artificial", "pages/4_Analisis_Detallado.py"),
+    ("⚖️", "Comparador", "Compará propiedades lado a lado", "pages/5_Comparador.py"),
+    ("🚨", "Alertas", "Eventos de mercado y watchlist", "pages/6_Alertas.py"),
+]
 
-    if df_events.empty:
-        st.info("Sin eventos recientes")
-    else:
-        for _, ev in df_events.iterrows():
-            event_label = EVENT_EMOJIS.get(
-                ev["event_type"], ev["event_type"]
-            )
-
-            # Formatear valores según el tipo
-            old_val = ev["old_value"]
-            new_val = ev["new_value"]
-            if ev["event_type"] == "price_drop":
-                old_str = format_price(old_val) if pd.notna(old_val) else "—"
-                new_str = format_price(new_val) if pd.notna(new_val) else "—"
-            else:
-                old_str = format_pct(old_val) if pd.notna(old_val) else "—"
-                new_str = format_pct(new_val) if pd.notna(new_val) else "—"
-
-            ts = pd.Timestamp(ev["timestamp"])
-            time_str = f"{ts.strftime('%d/%m %H:%M')} ({time_ago(ts)})"
-
+for i in range(0, len(nav_items), 2):
+    row = nav_items[i : i + 2]
+    cols = st.columns(2)
+    for col, (icon, title, desc, page) in zip(cols, row):
+        with col:
             st.markdown(
-                f"<div class='event-item'>"
-                f"  <strong>#{ev['property_id']}</strong> &middot; {event_label}"
-                f"  <br><span style='opacity:0.7;font-size:0.8rem;'>"
-                f"    {old_str} → {new_str} &middot; {time_str}"
-                f"  </span>"
+                f"<div class='nav-card'>"
+                f"<div class='nav-card-icon'>{icon}</div>"
+                f"<div class='nav-card-title'>{title}</div>"
+                f"<div class='nav-card-desc'>{desc}</div>"
                 f"</div>",
                 unsafe_allow_html=True,
             )
+            if st.button(f"Abrir {title}", key=f"nav_{title.lower().replace(' ', '_')}", width="stretch", type="primary"):
+                st.switch_page(page)
 
 st.divider()
 
-# ========================
-# NAVEGACIÓN
-# ========================
+# SECCIONES PLEGABLES
+with st.expander("📊 Ver estadísticas del mercado", expanded=False):
+    kpis = get_dashboard_kpis()
+    col_k1, col_k2, col_k3 = st.columns(3)
+    col_k1.metric("💰 Precio medio", f"{kpis['avg_price']:,.0f} €")
+    col_k2.metric("📈 Rentabilidad media", f"{kpis['avg_rent']:.1f}%")
+    col_k3.metric("🚨 Eventos (7d)", f"{kpis['recent_events']}")
 
-st.markdown("### ¿Qué quieres hacer?")
+    col_ch1, col_ch2 = st.columns(2)
+    with col_ch1:
+        from utils.services import get_score_distribution
+        df_scores = get_score_distribution()
+        mean_score = df_scores["opportunity_score"].mean()
+        fig_hist = px.histogram(
+            df_scores, x="opportunity_score", nbins=30,
+            title="Distribución de Scores",
+            color_discrete_sequence=["#1f77b4"],
+            labels={"opportunity_score": "Score"},
+        )
+        fig_hist.add_vline(x=mean_score, line_dash="dash", line_color="#d4a017",
+            annotation_text=f"Media: {mean_score:.1f}", annotation_position="top right")
+        fig_hist.update_layout(height=300, margin=dict(l=10, r=10, t=40, b=30),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="white")
+        st.plotly_chart(fig_hist, width="stretch")
 
-col_n1, col_n2, col_n3 = st.columns(3)
-
-with col_n1:
-    st.markdown("#### 📡 Radar")
-    st.caption("Detecta las mejores oportunidades del mercado en tiempo real.")
-    if st.button("Abrir Radar", width="stretch", type="primary"):
-        st.switch_page("pages/1_Radar.py")
-
-with col_n2:
-    st.markdown("#### 🗺️ Mapa")
-    st.caption("Visualiza oportunidades por zona y compara barrios.")
-    if st.button("Abrir Mapa", width="stretch"):
-        st.switch_page("pages/2_Mapa.py")
-
-with col_n3:
-    st.markdown("#### ⚖️ Comparador")
-    st.caption("Compara 2+ propiedades lado a lado con simulación.")
-    if st.button("Abrir Comparador", width="stretch"):
-        st.switch_page("pages/5_Comparador.py")
-
-col_n4, col_n5, col_n6 = st.columns(3)
-
-with col_n4:
-    st.markdown("#### 🏠 Propiedad")
-    st.caption("Simulación completa de inversión inmobiliaria.")
-    if st.button("Abrir Propiedad", width="stretch"):
-        st.switch_page("pages/3_propiedad.py")
-
-with col_n5:
-    st.markdown("#### 🤖 AI Copilot")
-    st.caption("Análisis inteligente y estrategias de compra.")
-    if st.button("Abrir Copilot", width="stretch"):
-        st.switch_page("pages/4_Analisis_Detallado.py")
-
-with col_n6:
-    st.markdown("#### 🚨 Alertas")
-    st.caption("Eventos de mercado y propiedades vigiladas.")
-    if st.button("Abrir Alertas", width="stretch"):
-        st.switch_page("pages/6_Alertas.py")
-
-col_n7, col_n8, col_n9 = st.columns([1, 1, 1])
-with col_n8:
-    st.markdown("#### 👤 Mi Cuenta")
-    st.caption("Tu perfil, plan y configuración.")
-    if st.button("Abrir Mi Cuenta", width="stretch"):
-        st.switch_page("pages/7_Mi_Cuenta.py")
-
-st.divider()
-
-# ========================
-# PERFILES
-# ========================
-
-st.markdown("### 💡 ¿Cómo funciona el perfil de inversión?")
-
-col_p1, col_p2, col_p3 = st.columns(3)
-
-with col_p1:
-    st.success("""
-    **🟢 Básico**
-    - Cashflow mínimo: 200€/mes
-    - Margen mínimo: 25%
-    - Precio máximo: 250K€
-    - Ideal para tu primera inversión
-    """)
-
-with col_p2:
-    st.warning("""
-    **🟡 Intermedio**
-    - Cashflow mínimo: 100€/mes
-    - Margen mínimo: 15%
-    - Precio máximo: 400K€
-    - Perfil equilibrado
-    """)
-
-with col_p3:
-    st.error("""
-    **🔴 Avanzado**
-    - Cashflow mínimo: 0€/mes
-    - Margen mínimo: 5%
-    - Precio máximo: 1M€
-    - Inversor experimentado
-    """)
-
-st.caption(
-    "Cambia tu perfil en el sidebar izquierdo → "
-    "se ajustan métricas y recomendaciones en toda la app."
-)
-
-st.divider()
+    with col_ch2:
+        from utils.services import get_top_barrios
+        df_barrios = get_top_barrios(limit=8)
+        fig_bar = px.bar(df_barrios, y="barrio", x="opportunity_index",
+            title="Top Barrios por Oportunidad", orientation="h",
+            text="opportunity_index", color="opportunity_index",
+            color_continuous_scale="Blues", labels={"barrio": "", "opportunity_index": "Índice"})
+        fig_bar.update_traces(texttemplate="%{text:.1f}", textposition="outside")
+        fig_bar.update_layout(height=300, margin=dict(l=10, r=10, t=40, b=30),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="white",
+            yaxis=dict(autorange="reversed"), coloraxis_showscale=False)
+        st.plotly_chart(fig_bar, width="stretch")
 
 with st.expander("📖 Metodología — ¿Cómo se calcula todo?", expanded=False):
     st.markdown(METODOLOGIA)

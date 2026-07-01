@@ -57,7 +57,7 @@ with st.sidebar:
             st.session_state["radar_simulated"] = df_sim.to_dict("records")
             st.rerun()
     else:
-        st.sidebar.success("📡 Datos en vivo de Idealista")
+        st.success("📡 Datos en vivo de Idealista")
 
 if "radar_simulated" in st.session_state:
     df = pd.DataFrame(st.session_state["radar_simulated"])

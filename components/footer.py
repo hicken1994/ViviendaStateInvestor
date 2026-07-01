@@ -3,13 +3,15 @@ from utils.datasources import FUENTES, DISCLAIMER, DATASET_VERSION, DATASET_DATE
 
 
 def render_datasource_badge():
-    cols = st.columns(4)
-    for i, (key, fuente) in enumerate(FUENTES.items()):
+    fuente_list = list(FUENTES.items())
+    cols = st.columns(len(fuente_list))
+    for i, (key, fuente) in enumerate(fuente_list):
         with cols[i]:
             icon = {
                 "ine": "📊",
                 "ministerio": "🏛️",
                 "idealista": "🏠",
+                "idealista_synthetic": "🧪",
                 "fotocasa": "📱",
             }.get(key, "📌")
             st.markdown(
