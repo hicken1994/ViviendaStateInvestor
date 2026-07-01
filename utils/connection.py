@@ -76,6 +76,19 @@ _CORE_TABLES = """
         property_id TEXT, precio_total REAL, rentabilidad REAL,
         fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+    CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        property_id TEXT,
+        event_type TEXT,
+        old_value REAL,
+        new_value REAL,
+        extra TEXT,
+        timestamp TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS barrio_rent (
+        barrio TEXT,
+        precio_m2_alquiler REAL
+    );
 """
 
 
