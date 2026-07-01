@@ -9,6 +9,7 @@ from utils.profiles import get_perfil, compute_score_with_profile
 from utils.timefmt import time_ago, format_timestamp
 from components.footer import render_footer
 from utils.auth import require_auth
+from utils.user_store import load_watchlist, save_watchlist
 
 st.set_page_config(page_title="Alertas", page_icon="🚨", layout="wide")
 
@@ -19,7 +20,7 @@ require_auth()
 # ========================
 
 if "watchlist" not in st.session_state:
-    st.session_state.watchlist = {"propiedades": [], "barrios": []}
+    st.session_state.watchlist = load_watchlist()
 
 wl = st.session_state.watchlist
 
@@ -233,6 +234,7 @@ for e in filtered:
                 else:
                     wl["propiedades"].append(pid_str)
                 st.session_state.watchlist = wl
+                save_watchlist(wl)
                 st.rerun()
 
 st.divider()
@@ -259,6 +261,7 @@ with st.expander("👁️ Mi watchlist — propiedades vigiladas", expanded=Fals
                 if st.button(f"✕ {label}", key=f"unwatch_prop_{pid_val}"):
                     wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != str(pid_val)]
                     st.session_state.watchlist = wl
+                    save_watchlist(wl)
                     st.rerun()
         else:
             st.caption("Ninguna. Vigila propiedades desde el Radar o desde aquí.")
@@ -271,6 +274,7 @@ with st.expander("👁️ Mi watchlist — propiedades vigiladas", expanded=Fals
                 if st.button(f"✕ {barrio}", key=f"unwatch_brr_{barrio}"):
                     wl["barrios"] = [b for b in wl["barrios"] if b != barrio]
                     st.session_state.watchlist = wl
+                    save_watchlist(wl)
                     st.rerun()
         else:
             st.caption("Ninguno. Podés vigilar barrios completos.")
@@ -285,6 +289,7 @@ with st.expander("👁️ Mi watchlist — propiedades vigiladas", expanded=Fals
         if new_barrio and new_barrio not in wl.get("barrios", []):
             wl["barrios"].append(new_barrio)
             st.session_state.watchlist = wl
+            save_watchlist(wl)
             st.rerun()
 
 st.divider()

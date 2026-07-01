@@ -9,6 +9,7 @@ from utils.history import generate_price_history, compute_price_trend
 from components.footer import render_footer
 from components.score_help import render_score_breakdown
 from utils.auth import require_auth
+from utils.user_store import save_watchlist
 
 
 require_auth()
@@ -193,6 +194,7 @@ with col_info:
             else:
                 wl["propiedades"].append(best_id)
             st.session_state.watchlist = wl
+            save_watchlist(wl)
             st.rerun()
 
 # --- Radar chart: perfil de la mejor puntuada vs barrio ---
@@ -299,12 +301,13 @@ for idx in range(0, len(top5), 3):
                         use_container_width=True,
                         help="Quitar de vigiladas" if is_watched else "Vigilar propiedad",
                     ):
-                        if is_watched:
-                            wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != row_id]
-                        else:
-                            wl["propiedades"].append(row_id)
-                        st.session_state.watchlist = wl
-                        st.rerun()
+                    if is_watched:
+                        wl["propiedades"] = [p for p in wl["propiedades"] if str(p) != row_id]
+                    else:
+                        wl["propiedades"].append(row_id)
+                    st.session_state.watchlist = wl
+                    save_watchlist(wl)
+                    st.rerun()
 
 st.divider()
 

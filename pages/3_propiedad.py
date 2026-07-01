@@ -7,6 +7,7 @@ from utils.profiles import get_perfil, get_recomendacion_perfil
 from utils.charts import create_radar_chart, create_price_history_chart
 from utils.history import generate_price_history, compute_price_trend
 from utils.auth import require_auth
+from utils.user_store import save_watchlist
 
 
 require_auth()
@@ -92,6 +93,7 @@ with nav_col2:
         else:
             wl["propiedades"].append(prop_id)
         st.session_state.watchlist = wl
+        save_watchlist(wl)
         st.rerun()
 
 col1, col2, col3 = st.columns(3)

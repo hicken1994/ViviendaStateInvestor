@@ -19,6 +19,7 @@ from utils.timefmt import time_ago, format_timestamp
 from components.footer import render_footer
 from components.score_help import render_score_legend
 from utils.auth import get_user, sign_in, sign_up, sign_out
+from utils.user_store import load_preferences, save_preference
 
 # ========================
 # ⚙️ CONFIGURACIÓN GENERAL
@@ -204,6 +205,12 @@ perfil_opciones = {
     "avanzado": "🔴 Avanzado — Máxima rentabilidad",
 }
 
+if user and "perfil_loaded" not in st.session_state:
+    prefs = load_preferences()
+    st.session_state["perfil_inversion"] = prefs.get("perfil_inversion", "intermedio")
+    st.session_state["perfil_loaded"] = True
+    st.session_state["perfil_synced"] = prefs.get("perfil_inversion", "intermedio")
+
 perfil_seleccionado = st.sidebar.radio(
     "¿Qué tipo de inversor eres?",
     list(perfil_opciones.keys()),
@@ -213,6 +220,10 @@ perfil_seleccionado = st.sidebar.radio(
     ),
     help="Tu perfil ajusta umbrales, métricas y recomendaciones en toda la app."
 )
+
+if user and perfil_seleccionado != st.session_state.get("perfil_synced"):
+    save_preference("perfil_inversion", perfil_seleccionado)
+    st.session_state["perfil_synced"] = perfil_seleccionado
 
 st.session_state["perfil_inversion"] = perfil_seleccionado
 perfil = get_perfil(str(perfil_seleccionado))
