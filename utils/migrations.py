@@ -73,8 +73,19 @@ def run_migrations():
 # ========================
 
 
-@_migration(1, "Agregar columna extra a events, indice en property_id")
+@_migration(1, "Crear tabla events si no existe, agregar columna extra")
 def migration_001(conn: sqlite3.Connection):
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            property_id TEXT,
+            event_type TEXT,
+            old_value REAL,
+            new_value REAL,
+            extra TEXT,
+            timestamp TIMESTAMP
+        )
+    """)
     cursor = conn.execute("PRAGMA table_info(events)")
     cols = [row[1] for row in cursor.fetchall()]
     if "extra" not in cols:

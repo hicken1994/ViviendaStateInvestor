@@ -12,6 +12,7 @@ from utils.datasources import get_dataset_stats, get_last_event_timestamp, METOD
 from utils.timefmt import time_ago
 from components.footer import render_footer
 from utils.auth import get_user, sign_in, sign_up, sign_out
+from utils.bootstrap import bootstrap as bootstrap_db
 from utils.user_store import load_preferences, save_preference, is_tour_completed, save_tour_completed
 
 # ========================
@@ -167,6 +168,7 @@ if not is_tour_completed():
 # ========================
 
 if "db_initialized" not in st.session_state:
+    bootstrap_db()
     run_migrations()
     add_is_premium_column()
     st.session_state["db_initialized"] = True
