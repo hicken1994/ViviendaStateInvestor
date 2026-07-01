@@ -135,30 +135,8 @@ def migration_004(conn: sqlite3.Connection):
     """)
 
 
-@_migration(5, "Crear vista_oportunidades_ai si no existe")
+@_migration(5, "Crear tablas principales si el seed no las proveyó")
 def migration_005(conn: sqlite3.Connection):
-    cursor = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='view' AND name='vista_oportunidades_ai'"
-    )
-    if cursor.fetchone() is None:
-        conn.execute("""
-            CREATE VIEW vista_oportunidades_ai AS
-            SELECT
-                o.*,
-                ROUND(
-                    CASE
-                        WHEN o.precio_m2_barrio IS NOT NULL
-                             AND o.precio_m2_barrio != 0
-                        THEN (o.precio_m2_barrio - o.precio_m2) * 100.0 / o.precio_m2_barrio
-                        ELSE NULL
-                    END
-                , 2) AS descuento_pct
-            FROM oportunidades o
-        """)
-
-
-@_migration(6, "Crear tablas principales si el seed no las proveyó")
-def migration_006(conn: sqlite3.Connection):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS oportunidades (
             propiedad_id INTEGER,
@@ -208,3 +186,30 @@ def migration_006(conn: sqlite3.Connection):
             fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+
+@_migration(6, "Crear vista_oportunidades_ai si la tabla oportunidades existe")
+def migration_006(conn: sqlite3.Connection):
+    cursor = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='oportunidades'"
+    )
+    if cursor.fetchone() is None:
+        return
+    cursor = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='view' AND name='vista_oportunidades_ai'"
+    )
+    if cursor.fetchone() is None:
+        conn.execute("""
+            CREATE VIEW vista_oportunidades_ai AS
+            SELECT
+                o.*,
+                ROUND(
+                    CASE
+                        WHEN o.precio_m2_barrio IS NOT NULL
+                             AND o.precio_m2_barrio != 0
+                        THEN (o.precio_m2_barrio - o.precio_m2) * 100.0 / o.precio_m2_barrio
+                        ELSE NULL
+                    END
+                , 2) AS descuento_pct
+            FROM oportunidades o
+        """)
