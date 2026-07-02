@@ -2,7 +2,26 @@ import streamlit as st
 import pandas as pd
 from utils.connection import get_conn_ro
 from utils.services import get_top_opportunities
-from utils.user_store import load_watchlist, save_preference
+from utils.user_store import load_watchlist
+from utils.auth import get_user
+
+
+def _try_email(opp: dict):
+    user = get_user()
+    if not user or not user.email:
+        return
+    emailed = st.session_state.get("emailed_opp_ids", set())
+    pid = opp.get("property_id", "")
+    if pid in emailed:
+        return
+    try:
+        from utils.email_notifier import send_opportunity_alert
+        sent = send_opportunity_alert(opp, user.email)
+        if sent:
+            emailed.add(pid)
+            st.session_state["emailed_opp_ids"] = emailed
+    except Exception:
+        pass
 
 
 def check_new_opportunities() -> list[dict]:
@@ -28,7 +47,7 @@ def check_new_opportunities() -> list[dict]:
             continue
 
         if barrio in watched_barrios and score >= 70:
-            detected.append({
+            opp = {
                 "type": "new_opportunity",
                 "property_id": pid,
                 "barrio": barrio,
@@ -36,8 +55,10 @@ def check_new_opportunities() -> list[dict]:
                 "precio": int(row.get("precio_total", 0)),
                 "decision": decision,
                 "rentabilidad": round(row.get("rentabilidad_estimada", 0), 1),
-            })
+            }
+            detected.append(opp)
             seen_ids.add(pid)
+            _try_email(opp)
 
     st.session_state["seen_notification_ids"] = list(seen_ids)
     return detected
