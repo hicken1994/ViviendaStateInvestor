@@ -172,11 +172,10 @@ if not is_tour_completed():
 
 def _sync_or_seed():
     if not needs_sync():
+        st.session_state["sync_status"] = "ok"
         return
-    print("DB vacia - sincronizando desde Supabase...")
     sync_from_supabase()
     if needs_sync():
-        print("Supabase no disponible - generando datos sinteticos...")
         try:
             conn = sqlite3.connect("real_estate.db")
             conn.execute("PRAGMA foreign_keys=OFF")
@@ -184,9 +183,14 @@ def _sync_or_seed():
             for t, c in seed_counts(conn).items():
                 print(f"  {t}: {c} rows")
             conn.close()
-            print("Seed sintetico completado")
+            st.toast("⚡ Datos sinteticos cargados (Supabase no disponible)")
+            st.session_state["sync_status"] = "fallback"
         except Exception as e:
             print(f"Error al generar seed sintetico: {e}")
+            st.session_state["sync_status"] = "error"
+    else:
+        st.toast("✅ Datos reales cargados desde Supabase!")
+        st.session_state["sync_status"] = "ok"
 
 
 # ========================
@@ -317,6 +321,9 @@ user_plan = load_preferences().get("plan", "Starter") if user else "Starter"
 stats = get_dataset_stats(user_plan)
 last_event = get_last_event_timestamp()
 
+_sync_icon = {"ok": "✅", "fallback": "⚡", "error": "❌"}.get(st.session_state.get("sync_status"), "❓")
+st.sidebar.caption(f"{_sync_icon} Sync: {st.session_state.get('sync_status', 'pendiente')}")
+
 with st.sidebar.expander("📊 Estado del dataset", expanded=False):
     st.markdown(
         f"- 🏠 **{stats['propiedades']:,}** propiedades  \n"
@@ -324,6 +331,8 @@ with st.sidebar.expander("📊 Estado del dataset", expanded=False):
         f"- 🚨 **{stats['eventos']}** eventos  \n"
         f"- 📡 {stats.get('fuente', 'sintética')}"
     )
+    if stats['propiedades'] == 0:
+        st.warning("No hay datos cargados — revisá secrets de Supabase")
     st.caption(f"Última actividad: {time_ago(last_event) if last_event else 'sin datos'}")
 st.sidebar.markdown("---")
 
