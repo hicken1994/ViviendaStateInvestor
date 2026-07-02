@@ -114,7 +114,7 @@ st.caption("Mismos parametros para todas las propiedades. Ajusta y compara.")
 col_e, col_i, col_a = st.columns(3)
 entrada_pct = col_e.slider("Entrada (%)", 10, 40, perfil["entrada_pct"], key="cmp_entrada") / 100
 interes = col_i.slider("Interes (%)", 1.0, 6.0, float(perfil["interes"]), key="cmp_interes") / 100
-anos = col_a.slider("Anos", 10, 40, perfil["anos"], key="cmp_anos")
+anos = col_a.slider("Anos", 10, 40, perfil["años"], key="cmp_anos")
 
 reforma = st.number_input("Coste reforma (EUR)", value=perfil["reforma"], key="cmp_reforma")
 gastos_pct = st.slider("Gastos compra (%)", 5, 15, perfil["gastos_pct"], key="cmp_gastos") / 100
