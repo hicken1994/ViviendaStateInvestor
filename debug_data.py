@@ -1,6 +1,6 @@
 """
 Debug: verificá si los datos reales están cargados en SQLite local.
-Corré con: python debug_data.py
+Ejecuta con: python debug_data.py
 """
 import sqlite3
 

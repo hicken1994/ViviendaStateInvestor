@@ -12,15 +12,13 @@ from components.score_help import render_score_breakdown
 
 require_auth()
 
-# ========================
-# PERFIL
-# ========================
+if "compare_properties" not in st.session_state:
+    st.session_state.compare_properties = []
+if "compare_names" not in st.session_state:
+    st.session_state.compare_names = []
 
 perfil_nombre = st.session_state.get("perfil_inversion", "intermedio")
 perfil = get_perfil(perfil_nombre)
-
-if "selected_for_compare" not in st.session_state:
-    st.session_state.selected_for_compare = []
 
 
 # ========================
@@ -137,60 +135,119 @@ for i, (_, row) in enumerate(top3.iterrows()):
         if row.get("image_url"):
             st.image(row["image_url"], width="stretch")
 
+    _is_selected = any(p.get("propiedad_id") == row.get("propiedad_id") for p in st.session_state.compare_properties)
+
     with col_info:
         st.markdown(f"### {badge} {row['barrio']} — {dec}")
 
         col_m1, col_m2, col_m3 = st.columns(3)
-        col_m1.metric("💰 Precio", f"{int(row['precio_total']):,} €", help=tooltip_help("precio_total"))
-        col_m2.metric("📊 Score", f"{round(score_val, 1)}", help=tooltip_help("score_total"))
-        col_m3.metric("📈 Rentabilidad", f"{round(row.get('rentabilidad_estimada', 0), 1)}%", help=tooltip_help("rentabilidad_estimada"))
+        col_m1.metric("Precio", f"{int(row['precio_total']):,} EUR", help=tooltip_help("precio_total"))
+        col_m2.metric("Score", f"{round(score_val, 1)}", help=tooltip_help("score_total"))
+        col_m3.metric("Rent.", f"{round(row.get('rentabilidad_estimada', 0), 1)}%", help=tooltip_help("rentabilidad_estimada"))
 
-        extra = f"🏗️ {int(row.get('metros', 0))} m²"
-        if row.get("dias"):
-            extra += f" · ⏱️ {int(row['dias'])} días"
+        extra = f"{int(row.get('metros', 0))} m2"
+        if row.get("rooms"):
+            extra += f" · {int(row['rooms'])} hab."
+        if row.get("bathrooms"):
+            extra += f" · {int(row['bathrooms'])} banos"
         st.caption(extra)
 
-        if row.get("flash_expires"):
-            st.markdown(f"🔥 **Oferta flash** — Vence {str(row['flash_expires'])[:16]}")
-
-        if st.button("🔍 Analizar →", type="primary" if i == 0 else "secondary", key=f"top3_{i}"):
-            st.session_state.selected_property = row.to_dict()
-            st.switch_page("pages/3_propiedad.py")
+        col_b1, col_b2 = st.columns(2)
+        with col_b1:
+            if st.button("Analizar", type="primary" if i == 0 else "secondary", key=f"top3_go_{i}"):
+                st.session_state.selected_property = row.to_dict()
+                st.switch_page("pages/3_propiedad.py")
+        with col_b2:
+            if _is_selected:
+                if st.button("Quitar de comparacion", key=f"top3_rm_{i}"):
+                    props = st.session_state.compare_properties
+                    names = st.session_state.compare_names
+                    pid = row.get("propiedad_id")
+                    for idx, p in enumerate(props):
+                        if p.get("propiedad_id") == pid:
+                            props.pop(idx)
+                            names.pop(idx)
+                            break
+                    st.session_state.compare_properties = props
+                    st.session_state.compare_names = names
+                    st.rerun()
+            else:
+                if st.button("Comparar", key=f"top3_add_{i}"):
+                    st.session_state.compare_properties.append(row.to_dict())
+                    st.session_state.compare_names.append(f"#{row.get('propiedad_id')} {row['barrio']}")
+                    st.rerun()
 
     if i < 2:
         st.divider()
 
 st.divider()
 
+# ── COMPARE BAR (visible si hay seleccionadas) ──
 
-# ========================
-# 📊 RANKING COMPLETO
-# ========================
+if st.session_state.compare_properties:
+    c_count = len(st.session_state.compare_properties)
+    c_col1, c_col2 = st.columns([3, 1])
+    with c_col1:
+        st.info(f"{c_count} propiedad(es) seleccionada(s) para comparar")
+    with c_col2:
+        if st.button("Comparar ahora", type="primary", width="stretch"):
+            st.switch_page("pages/5_Comparador.py")
+    st.divider()
 
-with st.expander("📊 Ranking completo — Top 20", expanded=False):
-    display_df = df[
-        ["barrio", "precio_total", "score_total", "rentabilidad_estimada", "decision"]
-    ].head(20).copy()
+# ── RANKING COMPLETO ──
 
-    display_df.columns = [
-        "Barrio", "Precio (€)", "Score Total", "Rentabilidad (%)", "Decisión",
-    ]
+with st.expander(f"Ranking completo — Top 20 ({len(st.session_state.compare_properties)} seleccionadas)", expanded=False):
+    top20 = df.head(20).copy()
 
-    for c in ["Score Total", "Rentabilidad (%)"]:
-        display_df[c] = display_df[c].round(2)
+    for idx, (_, row) in enumerate(top20.iterrows()):
+        _pid = row.get("propiedad_id")
+        _is_sel = any(p.get("propiedad_id") == _pid for p in st.session_state.compare_properties)
 
-    st.dataframe(
-        display_df,
-        width="stretch",
-        column_config={
-            "Precio (€)": st.column_config.NumberColumn(format="%d €"),
-            "Score Total": st.column_config.ProgressColumn(
-                min_value=0, max_value=100, format="%.1f"
-            ),
-            "Rentabilidad (%)": st.column_config.NumberColumn(format="%.2f %%"),
-            "Decisión": st.column_config.TextColumn(),
-        },
-    )
+        col_r1, col_r2 = st.columns([1, 1])
+        with col_r1:
+            decision = row.get("decision", "")
+            if "COMPRAR" in str(decision):
+                badge_r = "COMPRAR"
+            elif "NEGOCIAR" in str(decision):
+                badge_r = "NEGOCIAR"
+            else:
+                badge_r = "DESCARTAR"
+
+            extra_r = f"{int(row.get('metros', 0))} m2"
+            if row.get("rooms"):
+                extra_r += f" · {int(row['rooms'])} hab."
+            st.markdown(
+                f"**#{idx+1}** — {row['barrio']} — {badge_r} — "
+                f"Score: {row['score_total']:.1f} — {int(row['precio_total']):,} EUR"
+            )
+            st.caption(extra_r)
+
+        with col_r2:
+            c_btn, a_btn = st.columns(2)
+            with a_btn:
+                if st.button("Analizar", key=f"rank_go_{idx}"):
+                    st.session_state.selected_property = row.to_dict()
+                    st.switch_page("pages/3_propiedad.py")
+            with c_btn:
+                if _is_sel:
+                    if st.button("Quitar", key=f"rank_rm_{idx}"):
+                        props = st.session_state.compare_properties
+                        names = st.session_state.compare_names
+                        for j, p in enumerate(props):
+                            if p.get("propiedad_id") == _pid:
+                                props.pop(j)
+                                names.pop(j)
+                                break
+                        st.session_state.compare_properties = props
+                        st.session_state.compare_names = names
+                        st.rerun()
+                else:
+                    if st.button("Comparar", key=f"rank_add_{idx}"):
+                        st.session_state.compare_properties.append(row.to_dict())
+                        st.session_state.compare_names.append(
+                            f"#{row.get('propiedad_id')} {row['barrio']}"
+                        )
+                        st.rerun()
 
 
 # ========================

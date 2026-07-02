@@ -405,10 +405,10 @@ st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
 # TARJETAS DE NAVEGACIÓN
 nav_items = [
-    ("📡", "Radar", "Encontrá oportunidades con scoring inteligente", "pages/1_Radar.py"),
-    ("🗺️", "Mapa", "Explorá oportunidades por zona", "pages/2_Mapa.py"),
-    ("🏠", "Propiedad", "Simulá una inversión completa", "pages/3_propiedad.py"),
-    ("🤖", "AI Copilot", "Analizá con inteligencia artificial", "pages/4_Analisis_Detallado.py"),
+    ("📡", "Radar", "Encuentra oportunidades con scoring inteligente", "pages/1_Radar.py"),
+    ("🗺️", "Mapa", "Explora oportunidades por zona", "pages/2_Mapa.py"),
+    ("🏠", "Propiedad", "Simula una inversión completa", "pages/3_propiedad.py"),
+    ("🤖", "AI Copilot", "Analiza con inteligencia artificial", "pages/4_Analisis_Detallado.py"),
     ("⚖️", "Comparador", "Compará propiedades lado a lado", "pages/5_Comparador.py"),
     ("🚨", "Alertas", "Eventos de mercado y watchlist", "pages/6_Alertas.py"),
 ]
