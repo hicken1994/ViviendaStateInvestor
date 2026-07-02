@@ -2,6 +2,7 @@ from utils.connection import get_conn_ro
 
 DATASET_VERSION = "2.2"
 DATASET_DATE = "Mayo 2026"
+DATASET_YEAR = 2018  # Año real de los datos de Idealista18
 
 FUENTES = {
     "ine": {
@@ -90,7 +91,7 @@ def _detect_data_source() -> str:
         df = pd.read_sql("SELECT DISTINCT source FROM oportunidades WHERE source IS NOT NULL LIMIT 1", conn)
     if not df.empty:
         src = str(df["source"].iloc[0])
-        return {"idealista18": "Idealista18 (2018)", "kaggle": "Kaggle + Idealista18"}.get(src, src.capitalize())
+        return {"idealista18": f"Idealista18 ({DATASET_YEAR})", "kaggle": f"Kaggle + Idealista18 ({DATASET_YEAR})"}.get(src, src.capitalize())
     return "Dataset sintético"
 
 

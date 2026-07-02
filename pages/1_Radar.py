@@ -3,9 +3,10 @@ import pandas as pd
 from utils.db import get_top_opportunities, simulate_market, get_recent_events, get_barrio_avg_scores
 from utils.images import add_images
 from utils.tooltips import tooltip_help
-from utils.profiles import get_perfil, compute_score_with_profile
+from utils.profiles import compute_score_with_profile
 from utils.charts import create_radar_chart
 from components.footer import render_footer
+from components.sidebar import render_sidebar
 from utils.auth import require_auth
 from components.score_help import render_score_breakdown
 
@@ -17,8 +18,7 @@ if "compare_properties" not in st.session_state:
 if "compare_names" not in st.session_state:
     st.session_state.compare_names = []
 
-perfil_nombre = st.session_state.get("perfil_inversion", "intermedio")
-perfil = get_perfil(perfil_nombre)
+perfil = render_sidebar()
 
 
 # ========================
@@ -27,7 +27,83 @@ perfil = get_perfil(perfil_nombre)
 
 st.markdown("# 📡 Radar de inversión")
 st.caption("Análisis de oportunidades inmobiliarias en Madrid ordenadas por puntuación según tu perfil.")
+
+# ── DATA FRESHNESS BADGE ──
+from utils.datasources import _detect_data_source as _dds
+_fuente = _dds()
+if "2018" in _fuente:
+    st.markdown(
+        f"<span style='background: rgba(245,158,11,0.12); color: #f59e0b; padding: 0.15rem 0.6rem; "
+        f"border-radius: 4px; font-size: 0.75rem; font-weight: 600;'>"
+        f"📅 Datos de {_fuente} — referencia histórica, no refleja el mercado actual</span>",
+        unsafe_allow_html=True,
+    )
+elif "sintético" in _fuente.lower():
+    st.markdown(
+        f"<span style='background: rgba(245,158,11,0.12); color: #f59e0b; padding: 0.15rem 0.6rem; "
+        f"border-radius: 4px; font-size: 0.75rem; font-weight: 600;'>"
+        f"🧪 Datos sintéticos — demo educativa</span>",
+        unsafe_allow_html=True,
+    )
+
 st.markdown(f"**{perfil['emoji']} {perfil['nombre']}** — _{perfil['descripcion']}_")
+
+
+# ========================
+# 🎨 CSS SEMÁFORO FINANCIERO
+# ========================
+
+st.markdown("""
+<style>
+    .property-card {
+        border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 0.75rem;
+        position: relative; transition: all 0.2s;
+    }
+    .property-card:hover {
+        transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .card-comprar {
+        background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.02) 100%);
+        border-left: 4px solid #22c55e;
+    }
+    .card-negociar {
+        background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(245,158,11,0.02) 100%);
+        border-left: 4px solid #f59e0b;
+    }
+    .card-descartar {
+        background: linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(239,68,68,0.02) 100%);
+        border-left: 4px solid #ef4444;
+    }
+    .decision-badge {
+        display: inline-block; padding: 0.2rem 0.7rem; border-radius: 4px;
+        font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.3px; margin-right: 0.6rem;
+    }
+    .badge-comprar { background: #22c55e; color: white; }
+    .badge-negociar { background: #f59e0b; color: white; }
+    .badge-descartar { background: #ef4444; color: white; }
+    .card-title { color: white; font-size: 1.15rem; font-weight: 700; }
+    .card-metrics { display: flex; gap: 1.5rem; margin: 0.6rem 0 0.3rem 0; }
+    .card-metric { display: flex; flex-direction: column; }
+    .metric-label { color: rgba(255,255,255,0.35); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.3px; }
+    .metric-value { color: white; font-size: 1.25rem; font-weight: 700; line-height: 1.3; }
+    .card-extra { color: rgba(255,255,255,0.3); font-size: 0.8rem; margin-bottom: 0.2rem; }
+    .card-compact {
+        border-radius: 8px; padding: 0.45rem 0.8rem; margin-bottom: 0.35rem;
+        border-left: 3px solid; transition: all 0.15s;
+    }
+    .card-compact:hover { opacity: 0.85; }
+    .rank-num { color: rgba(255,255,255,0.4); font-weight: 700; margin-right: 0.4rem; }
+    .badge-small {
+        display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px;
+        font-size: 0.65rem; font-weight: 700; margin-right: 0.4rem; vertical-align: middle;
+    }
+    .rank-barrio { color: white; font-weight: 600; margin-right: 0.4rem; }
+    .rank-sep { color: rgba(255,255,255,0.15); margin: 0 0.3rem; }
+    .rank-value { color: white; font-weight: 600; }
+    .rank-extra { color: rgba(255,255,255,0.3); font-size: 0.8rem; }
+</style>
+""", unsafe_allow_html=True)
 
 
 # ========================
@@ -110,11 +186,11 @@ st.divider()
 
 
 # ========================
-# 🥇 TOP 3 OPORTUNIDADES
+# 🥇 TOP 3 — DECISIONES DE INVERSIÓN
 # ========================
 
-st.markdown("## 🎯 Top oportunidades para tu perfil")
-st.caption(f"Las 3 mejores propiedades según tu scoring personalizado. Mínimo: **{perfil['min_score']}** pts.")
+st.markdown("## 🎯 Top 3 — Decisiones de inversión")
+st.caption(f"Propiedades ordenadas por score. Cada card indica COMPRAR, NEGOCIAR o DESCARTAR según tu perfil **{perfil['nombre']}**.")
 
 top3 = df.head(3).reset_index(drop=True)
 
@@ -122,63 +198,74 @@ for i, (_, row) in enumerate(top3.iterrows()):
     score_val = row["score_total"]
     decision_val = row.get("decision", "")
 
-    if "COMPRAR" in decision_val:
-        badge, dec = "🟢", "COMPRAR"
-    elif "NEGOCIAR" in decision_val:
-        badge, dec = "🟡", "NEGOCIAR"
+    if "COMPRAR" in str(decision_val):
+        dec_icon, decision, dec_css = "🟢", "COMPRAR", "comprar"
+    elif "NEGOCIAR" in str(decision_val):
+        dec_icon, decision, dec_css = "🟡", "NEGOCIAR", "negociar"
     else:
-        badge, dec = "🔴", "DESCARTAR"
+        dec_icon, decision, dec_css = "🔴", "DESCARTAR", "descartar"
 
-    col_img, col_info = st.columns([1, 2.5])
+    precio_str = f"{int(row['precio_total']):,} €"
+    score_str = f"{score_val:.1f}"
+    rent_str = f"{round(row.get('rentabilidad_estimada', 0), 1)}%"
 
-    with col_img:
-        if row.get("image_url"):
-            st.image(row["image_url"], width="stretch")
+    extra_parts = [f"{int(row.get('metros', 0))} m²"]
+    if row.get("rooms"):
+        extra_parts.append(f"{int(row['rooms'])} hab.")
+    if row.get("bathrooms"):
+        extra_parts.append(f"{int(row['bathrooms'])} baños")
+    extra_str = " · ".join(extra_parts)
 
     _is_selected = any(p.get("propiedad_id") == row.get("propiedad_id") for p in st.session_state.compare_properties)
 
-    with col_info:
-        st.markdown(f"### {badge} {row['barrio']} — {dec}")
+    st.markdown(f"""
+    <div class="property-card card-{dec_css}">
+        <div>
+            <span class="decision-badge badge-{dec_css}">{dec_icon} {decision}</span>
+            <span class="card-title">{row['barrio']}</span>
+        </div>
+        <div class="card-metrics">
+            <div class="card-metric">
+                <span class="metric-label">Precio</span>
+                <span class="metric-value">{precio_str}</span>
+            </div>
+            <div class="card-metric">
+                <span class="metric-label">Score</span>
+                <span class="metric-value">{score_str}</span>
+            </div>
+            <div class="card-metric">
+                <span class="metric-label">Rentabilidad</span>
+                <span class="metric-value">{rent_str}</span>
+            </div>
+        </div>
+        <div class="card-extra">{extra_str}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-        col_m1, col_m2, col_m3 = st.columns(3)
-        col_m1.metric("Precio", f"{int(row['precio_total']):,} EUR", help=tooltip_help("precio_total"))
-        col_m2.metric("Score", f"{round(score_val, 1)}", help=tooltip_help("score_total"))
-        col_m3.metric("Rent.", f"{round(row.get('rentabilidad_estimada', 0), 1)}%", help=tooltip_help("rentabilidad_estimada"))
-
-        extra = f"{int(row.get('metros', 0))} m2"
-        if row.get("rooms"):
-            extra += f" · {int(row['rooms'])} hab."
-        if row.get("bathrooms"):
-            extra += f" · {int(row['bathrooms'])} banos"
-        st.caption(extra)
-
-        col_b1, col_b2 = st.columns(2)
-        with col_b1:
-            if st.button("Analizar", type="primary" if i == 0 else "secondary", key=f"top3_go_{i}"):
-                st.session_state.selected_property = row.to_dict()
-                st.switch_page("pages/3_propiedad.py")
-        with col_b2:
-            if _is_selected:
-                if st.button("Quitar de comparacion", key=f"top3_rm_{i}"):
-                    props = st.session_state.compare_properties
-                    names = st.session_state.compare_names
-                    pid = row.get("propiedad_id")
-                    for idx, p in enumerate(props):
-                        if p.get("propiedad_id") == pid:
-                            props.pop(idx)
-                            names.pop(idx)
-                            break
-                    st.session_state.compare_properties = props
-                    st.session_state.compare_names = names
-                    st.rerun()
-            else:
-                if st.button("Comparar", key=f"top3_add_{i}"):
-                    st.session_state.compare_properties.append(row.to_dict())
-                    st.session_state.compare_names.append(f"#{row.get('propiedad_id')} {row['barrio']}")
-                    st.rerun()
-
-    if i < 2:
-        st.divider()
+    col_b1, col_b2 = st.columns(2)
+    with col_b1:
+        if st.button("🔍 Analizar propiedad", type="primary" if i == 0 else "secondary", key=f"top3_go_{i}"):
+            st.session_state.selected_property = row.to_dict()
+            st.switch_page("pages/3_propiedad.py")
+    with col_b2:
+        if _is_selected:
+            if st.button("✕ Quitar de comparación", key=f"top3_rm_{i}"):
+                props = st.session_state.compare_properties
+                names = st.session_state.compare_names
+                pid = row.get("propiedad_id")
+                for idx, p in enumerate(props):
+                    if p.get("propiedad_id") == pid:
+                        props.pop(idx)
+                        names.pop(idx)
+                        break
+                st.session_state.compare_properties = props
+                st.session_state.compare_names = names
+                st.rerun()
+        else:
+            if st.button("➕ Comparar", key=f"top3_add_{i}"):
+                st.session_state.compare_properties.append(row.to_dict())
+                st.session_state.compare_names.append(f"#{row.get('propiedad_id')} {row['barrio']}")
+                st.rerun()
 
 st.divider()
 
@@ -203,51 +290,58 @@ with st.expander(f"Ranking completo — Top 20 ({len(st.session_state.compare_pr
         _pid = row.get("propiedad_id")
         _is_sel = any(p.get("propiedad_id") == _pid for p in st.session_state.compare_properties)
 
-        col_r1, col_r2 = st.columns([1, 1])
+        decision = row.get("decision", "")
+        if "COMPRAR" in str(decision):
+            dec_css = "comprar"
+        elif "NEGOCIAR" in str(decision):
+            dec_css = "negociar"
+        else:
+            dec_css = "descartar"
+
+        extra_r = f"{int(row.get('metros', 0))} m²"
+        if row.get("rooms"):
+            extra_r += f" · {int(row['rooms'])} hab."
+
+        st.markdown(f"""
+        <div class="card-compact card-{dec_css}">
+            <span class="rank-num">#{idx+1}</span>
+            <span class="badge-small badge-{dec_css}">{decision[:4]}</span>
+            <span class="rank-barrio">{row['barrio']}</span>
+            <span class="rank-value">{row['score_total']:.1f}</span>
+            <span class="rank-sep">·</span>
+            <span class="rank-value">{int(row['precio_total']):,} €</span>
+            <span class="rank-sep">·</span>
+            <span class="rank-extra">{extra_r}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_r1, col_r2, col_r3 = st.columns([6, 1, 1])
         with col_r1:
-            decision = row.get("decision", "")
-            if "COMPRAR" in str(decision):
-                badge_r = "COMPRAR"
-            elif "NEGOCIAR" in str(decision):
-                badge_r = "NEGOCIAR"
-            else:
-                badge_r = "DESCARTAR"
-
-            extra_r = f"{int(row.get('metros', 0))} m2"
-            if row.get("rooms"):
-                extra_r += f" · {int(row['rooms'])} hab."
-            st.markdown(
-                f"**#{idx+1}** — {row['barrio']} — {badge_r} — "
-                f"Score: {row['score_total']:.1f} — {int(row['precio_total']):,} EUR"
-            )
-            st.caption(extra_r)
-
+            st.markdown("")
         with col_r2:
-            c_btn, a_btn = st.columns(2)
-            with a_btn:
-                if st.button("Analizar", key=f"rank_go_{idx}"):
-                    st.session_state.selected_property = row.to_dict()
-                    st.switch_page("pages/3_propiedad.py")
-            with c_btn:
-                if _is_sel:
-                    if st.button("Quitar", key=f"rank_rm_{idx}"):
-                        props = st.session_state.compare_properties
-                        names = st.session_state.compare_names
-                        for j, p in enumerate(props):
-                            if p.get("propiedad_id") == _pid:
-                                props.pop(j)
-                                names.pop(j)
-                                break
-                        st.session_state.compare_properties = props
-                        st.session_state.compare_names = names
-                        st.rerun()
-                else:
-                    if st.button("Comparar", key=f"rank_add_{idx}"):
-                        st.session_state.compare_properties.append(row.to_dict())
-                        st.session_state.compare_names.append(
-                            f"#{row.get('propiedad_id')} {row['barrio']}"
-                        )
-                        st.rerun()
+            if st.button("🔍", key=f"rank_go_{idx}", help="Analizar propiedad"):
+                st.session_state.selected_property = row.to_dict()
+                st.switch_page("pages/3_propiedad.py")
+        with col_r3:
+            if _is_sel:
+                if st.button("✕", key=f"rank_rm_{idx}", help="Quitar de comparación"):
+                    props = st.session_state.compare_properties
+                    names = st.session_state.compare_names
+                    for j, p in enumerate(props):
+                        if p.get("propiedad_id") == _pid:
+                            props.pop(j)
+                            names.pop(j)
+                            break
+                    st.session_state.compare_properties = props
+                    st.session_state.compare_names = names
+                    st.rerun()
+            else:
+                if st.button("➕", key=f"rank_add_{idx}", help="Comparar"):
+                    st.session_state.compare_properties.append(row.to_dict())
+                    st.session_state.compare_names.append(
+                        f"#{row.get('propiedad_id')} {row['barrio']}"
+                    )
+                    st.rerun()
 
 
 # ========================
