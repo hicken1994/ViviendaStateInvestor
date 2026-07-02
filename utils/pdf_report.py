@@ -139,7 +139,7 @@ def generar_informe_propiedad(prop: dict) -> bytes:
         "No constituye asesoramiento financiero. Verifique toda la informacion antes de tomar decisiones de inversion."
     ))
 
-    return pdf.output()
+    return bytes(pdf.output())
 
 
 def generar_informe_top3(top3: list[dict]) -> bytes:
@@ -193,4 +193,4 @@ def generar_informe_top3(top3: list[dict]) -> bytes:
     pdf.set_font("Helvetica", "I", 7)
     pdf.multi_cell(0, 4, "Datos historicos Idealista18 (2018). No constituye asesoramiento financiero.")
 
-    return pdf.output()
+    return bytes(pdf.output())
