@@ -84,6 +84,16 @@ def get_last_event_timestamp() -> str | None:
     return None
 
 
+def _detect_data_source() -> str:
+    import pandas as pd
+    with get_conn_ro() as conn:
+        df = pd.read_sql("SELECT DISTINCT source FROM oportunidades WHERE source IS NOT NULL LIMIT 1", conn)
+    if not df.empty:
+        src = str(df["source"].iloc[0])
+        return {"idealista18": "Idealista18 (2018)", "kaggle": "Kaggle + Idealista18"}.get(src, src.capitalize())
+    return "Dataset sintético"
+
+
 def get_dataset_stats(user_plan: str = "Starter") -> dict:
     import pandas as pd
     if user_plan in ("Pro", "Enterprise") and _idealista_available():
@@ -96,7 +106,7 @@ def get_dataset_stats(user_plan: str = "Starter") -> dict:
         }
     with get_conn_ro() as conn:
         total = pd.read_sql("SELECT COUNT(*) as c FROM oportunidades", conn)["c"].iloc[0]
-        barrios = pd.read_sql("SELECT COUNT(DISTINCT barrio) as c FROM oportunidades", conn)["c"].iloc[0]
+        barrios = pd.read_sql("SELECT DISTINCT barrio FROM oportunidades", conn).shape[0]
         distritos = pd.read_sql("SELECT COUNT(*) as c FROM mapas_distritos", conn)["c"].iloc[0]
         eventos = pd.read_sql("SELECT COUNT(*) as c FROM events", conn)["c"].iloc[0]
     return {
@@ -104,7 +114,7 @@ def get_dataset_stats(user_plan: str = "Starter") -> dict:
         "barrios": int(barrios),
         "distritos": int(distritos),
         "eventos": int(eventos),
-        "fuente": "Dataset sintético",
+        "fuente": _detect_data_source(),
     }
 
 
