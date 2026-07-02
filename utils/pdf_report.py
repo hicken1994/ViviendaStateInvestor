@@ -7,7 +7,7 @@ class ReportPDF(FPDF):
     def header(self):
         self.set_font("Helvetica", "B", 10)
         self.set_text_color(100, 100, 100)
-        self.cell(0, 6, "Vivienda AI — Madrid Investment Intelligence", align="L")
+        self.cell(0, 6, "Vivienda AI - Madrid Investment Intelligence", align="L")
         self.ln(8)
 
     def footer(self):
@@ -149,7 +149,7 @@ def generar_informe_top3(top3: list[dict]) -> bytes:
 
     pdf.set_font("Helvetica", "B", 18)
     pdf.set_text_color(30, 30, 30)
-    pdf.cell(0, 12, "Top 3 — Oportunidades de Inversion", new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 12, "Top 3 - Oportunidades de Inversion", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(100, 100, 100)
     pdf.cell(0, 6, f"Generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}", new_x="LMARGIN", new_y="NEXT")
@@ -170,7 +170,7 @@ def generar_informe_top3(top3: list[dict]) -> bytes:
         pdf.set_fill_color(*dec_color)
         pdf.set_text_color(255, 255, 255)
         pdf.set_font("Helvetica", "B", 14)
-        pdf.cell(0, 10, f"  #{i}  {prop.get('barrio', 'Sin barrio')} — {dec_label}", fill=True, new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 10, f"  #{i}  {prop.get('barrio', 'Sin barrio')} - {dec_label}", fill=True, new_x="LMARGIN", new_y="NEXT")
         pdf.ln(4)
 
         pdf.set_text_color(30, 30, 30)
