@@ -10,6 +10,7 @@ from utils.timefmt import time_ago, format_timestamp
 from components.footer import render_footer
 from utils.auth import require_auth
 from utils.user_store import load_watchlist, save_watchlist
+from utils.notifications import check_new_opportunities, check_price_drops, mark_all_read
 
 st.set_page_config(page_title="Alertas", page_icon="🚨", layout="wide")
 
@@ -130,6 +131,37 @@ if barrios:
 
 st.markdown("# 🚨 Alertas de mercado")
 
+real_opps = check_new_opportunities()
+real_drops = check_price_drops()
+
+if real_opps:
+    st.markdown("### 🆕 Oportunidades detectadas en tus barrios vigilados")
+    st.caption("Propiedades con score ≥ 70 que aparecieron en barrios de tu watchlist.")
+    for opp in real_opps:
+        decision = str(opp.get("decision", ""))
+        if "COMPRAR" in decision:
+            dec_icon, dec_color = "🟢", "#22c55e"
+        elif "NEGOCIAR" in decision:
+            dec_icon, dec_color = "🟡", "#f59e0b"
+        else:
+            dec_icon, dec_color = "🔴", "#ef4444"
+
+        barrio = opp.get("barrio", "—")
+        precio = opp.get("precio", 0)
+        score = opp.get("score", 0)
+        rent = opp.get("rentabilidad", 0)
+        pid = opp.get("property_id", "")
+        st.markdown(
+            f"<div style='background:rgba(34,197,94,0.06);border-left:3px solid {dec_color};"
+            f"border-radius:6px;padding:0.6rem 1rem;margin-bottom:0.5rem;'>"
+            f"<strong>{dec_icon} {barrio}</strong> — "
+            f"{int(precio):,}€ · Score: {score} · Rent: {rent}% "
+            f"<span style='color:{dec_color};font-weight:700;'>→ {decision}</span>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+    st.divider()
+
 k1, k2, k3, k4, k5 = st.columns(5)
 
 price_drops = len([e for e in filtered if e["event_type"] == "price_drop"])
@@ -145,6 +177,9 @@ k5.metric("🔗 Identificadas", f"{matched}/{len(filtered)}")
 
 st.divider()
 
+if st.button("✅ Marcar todo como leido", type="secondary"):
+    mark_all_read()
+    st.rerun()
 
 # ========================
 # LISTA DE EVENTOS

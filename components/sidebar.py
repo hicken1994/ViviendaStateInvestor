@@ -4,6 +4,7 @@ from utils.user_store import load_preferences, save_preference
 from utils.datasources import get_dataset_stats, get_last_event_timestamp
 from utils.timefmt import time_ago
 from utils.auth import get_user, sign_out
+from utils.notifications import get_unread_count, check_new_opportunities, check_price_drops, mark_all_read
 
 
 def _inject_global_css():
@@ -100,6 +101,15 @@ def render_sidebar() -> dict:
     for label, page in nav_items:
         if st.sidebar.button(label, key=f"nav_{page.split('/')[-1].replace('.py','')}", width="stretch"):
             st.switch_page(page)
+
+    # ── NOTIFICACIONES ──
+    unread = get_unread_count()
+    notif_label = f"🔔 Notificaciones ({unread})" if unread else "🔔 Notificaciones"
+    if st.sidebar.button(notif_label, key="nav_notificaciones", width="stretch"):
+        st.switch_page("pages/6_Alertas.py")
+    if unread > 0 and st.sidebar.button("✅ Marcar todo leido", key="mark_read_sidebar", width="stretch"):
+        mark_all_read()
+        st.rerun()
 
     st.sidebar.markdown("---")
 
