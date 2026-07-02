@@ -9,6 +9,7 @@ from components.footer import render_footer
 from components.sidebar import render_sidebar
 from utils.auth import require_auth
 from components.score_help import render_score_breakdown
+from utils.pdf_report import generar_informe_top3
 
 
 require_auth()
@@ -266,6 +267,17 @@ for i, (_, row) in enumerate(top3.iterrows()):
                 st.session_state.compare_properties.append(row.to_dict())
                 st.session_state.compare_names.append(f"#{row.get('propiedad_id')} {row['barrio']}")
                 st.rerun()
+
+    # ── Exportar Top 3 a PDF ──
+    pdf_bytes = generar_informe_top3(top3.to_dict("records"))
+    st.download_button(
+        label="📄 Exportar Top 3 como PDF",
+        data=pdf_bytes,
+        file_name="top_3_oportunidades.pdf",
+        mime="application/pdf",
+        type="secondary",
+        width="stretch",
+    )
 
 st.divider()
 

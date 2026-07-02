@@ -7,7 +7,7 @@ from utils.charts import create_radar_chart, create_price_history_chart
 from utils.history import generate_price_history, compute_price_trend
 from utils.auth import require_auth
 from utils.user_store import save_watchlist
-
+from utils.pdf_report import generar_informe_propiedad
 
 require_auth()
 
@@ -248,21 +248,35 @@ if perfil.get("mostrar_detalle_scoring"):
                 st.plotly_chart(fig, width="stretch", key="radar_detalle")
 
 # ========================
-# 🧠 VALIDAR CON IA
+# 🧠 VALIDAR CON IA + EXPORTAR PDF
 # ========================
 
 st.divider()
-st.info("👉 Validá esta decisión con un análisis más profundo usando IA")
+col_ia, col_pdf = st.columns(2)
 
-if st.button("🔍 Validar con IA", type="primary"):
-    st.session_state.copilot_property = {
-        **prop,
-        "score_total": round(score_total, 2),
-        "cashflow": round(cashflow, 2),
-        "break_even": round(break_even, 2),
-        "margen": round(margen_euros, 2),
-        "margen_pct": round(margen_pct, 2),
-        "recomendacion_modelo": recomendacion,
-        "perfil_inversion": perfil_nombre,
-    }
-    st.switch_page("pages/4_Analisis_Detallado.py")
+with col_ia:
+    st.info("👉 Validá esta decisión con un análisis más profundo usando IA")
+    if st.button("🔍 Validar con IA", type="primary", width="stretch"):
+        st.session_state.copilot_property = {
+            **prop,
+            "score_total": round(score_total, 2),
+            "cashflow": round(cashflow, 2),
+            "break_even": round(break_even, 2),
+            "margen": round(margen_euros, 2),
+            "margen_pct": round(margen_pct, 2),
+            "recomendacion_modelo": recomendacion,
+            "perfil_inversion": perfil_nombre,
+        }
+        st.switch_page("pages/4_Analisis_Detallado.py")
+
+with col_pdf:
+    st.info("📄 Exportá esta propiedad a PDF para compartirla o archivarla.")
+    pdf_bytes = generar_informe_propiedad(prop)
+    st.download_button(
+        label="📄 Exportar PDF",
+        data=pdf_bytes,
+        file_name=f"informe_{barrio}_{int(precio) if precio else 0}.pdf".replace(" ", "_"),
+        mime="application/pdf",
+        type="secondary",
+        width="stretch",
+    )

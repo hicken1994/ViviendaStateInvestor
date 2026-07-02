@@ -7,3 +7,4 @@ plotly==6.6.0
 supabase==2.5.3
 requests==2.32.3
 stripe==11.4.1
+fpdf2==2.8.2
