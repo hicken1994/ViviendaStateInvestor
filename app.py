@@ -7,7 +7,7 @@ from utils.db import add_is_premium_column
 from utils.migrations import run_migrations
 from utils.seed_data import seed_all as seed_synthetic, get_counts as seed_counts
 from utils.supabase_sync import sync_from_supabase, needs_sync
-from utils.auth import get_user, sign_in, sign_up, sign_out
+from utils.auth import get_user, sign_in, sign_up, sign_out, send_magic_link, sign_in_with_google
 from utils.bootstrap import bootstrap as bootstrap_db
 from utils.user_store import is_tour_completed
 
@@ -143,7 +143,9 @@ if user is None:
         st.divider()
         st.markdown("<h3 style='text-align: center; color: white;'>🔐 Accede a la plataforma</h3>", unsafe_allow_html=True)
 
-        tab_login, tab_signup = st.tabs(["Iniciar Sesión", "Crear Cuenta"])
+        tab_login, tab_magic, tab_google, tab_signup = st.tabs([
+            "🔑 Contraseña", "📧 Magic Link", "🔄 Google", "Crear Cuenta"
+        ])
 
         with tab_login:
             with st.form("login_form"):
@@ -163,6 +165,37 @@ if user is None:
                                     st.error("Email o contraseña incorrectos")
                             except Exception as e:
                                 st.error(f"Error de conexión: {e}")
+
+        with tab_magic:
+            st.caption("Recibí un link mágico en tu email para entrar sin contraseña.")
+            with st.form("magic_link_form"):
+                ml_email = st.text_input("Email", placeholder="tu@email.com", key="ml_email")
+                submitted_ml = st.form_submit_button("Enviar link mágico", type="primary", width="stretch")
+                if submitted_ml:
+                    if not ml_email:
+                        st.error("Ingresá tu email")
+                    else:
+                        with st.spinner("Enviando link..."):
+                            try:
+                                resp = send_magic_link(ml_email)
+                                if resp:
+                                    st.success("Link mágico enviado. Revisá tu email (incluí spam).")
+                                else:
+                                    st.error("Error al enviar el link")
+                            except Exception as e:
+                                st.error(f"Error: {e}")
+
+        with tab_google:
+            st.caption("Accedé con tu cuenta de Google.")
+            st.info("⚠️ Configurá Google OAuth en Supabase Auth Settings primero.")
+            if st.button("🔄 Continuar con Google", type="primary", width="stretch"):
+                try:
+                    resp = sign_in_with_google()
+                    if resp and resp.url:
+                        st.markdown(f"[Abrir Google para iniciar sesión]({resp.url})")
+                        st.success("Hacé clic en el link de arriba para continuar con Google.")
+                except Exception as e:
+                    st.error(f"Error: {e}")
 
         with tab_signup:
             with st.form("signup_form"):

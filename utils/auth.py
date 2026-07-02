@@ -30,6 +30,20 @@ def sign_in(email: str, password: str):
     return resp
 
 
+def send_magic_link(email: str):
+    """Envía un magic link (OTP) al email del usuario."""
+    supabase = _get_client()
+    resp = supabase.auth.sign_in_with_otp({"email": email})
+    return resp
+
+
+def sign_in_with_google():
+    """Redirige a Google OAuth. En Streamlit, abrimos la URL en una nueva pestaña."""
+    supabase = _get_client()
+    resp = supabase.auth.sign_in_with_oauth({"provider": "google"})
+    return resp
+
+
 def sign_out():
     supabase = _get_client()
     supabase.auth.sign_out()
