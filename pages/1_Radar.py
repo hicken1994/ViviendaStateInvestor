@@ -277,6 +277,7 @@ for i, (_, row) in enumerate(top3.iterrows()):
         mime="application/pdf",
         type="secondary",
         width="stretch",
+        key="pdf_top3",
     )
 
 st.divider()

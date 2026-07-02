@@ -279,4 +279,5 @@ with col_pdf:
         mime="application/pdf",
         type="secondary",
         width="stretch",
+        key="pdf_propiedad",
     )
