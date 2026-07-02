@@ -60,7 +60,8 @@ _CORE_TABLES = """
         score_descuento REAL, score_precio REAL,
         score_liquidez REAL, score_tamano REAL,
         rentabilidad_estimada REAL, decision TEXT,
-        is_premium INTEGER DEFAULT 0
+        is_premium INTEGER DEFAULT 0,
+        source TEXT
     );
     CREATE TABLE IF NOT EXISTS mapas_distritos (
         distrito TEXT PRIMARY KEY, latitud REAL, longitud REAL

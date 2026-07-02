@@ -223,3 +223,11 @@ def migration_006(conn: sqlite3.Connection):
                 , 2) AS descuento_pct
             FROM oportunidades o
         """)
+
+
+@_migration(7, "Agregar columna source a oportunidades")
+def migration_007(conn: sqlite3.Connection):
+    cursor = conn.execute("PRAGMA table_info(oportunidades)")
+    cols = [row[1] for row in cursor.fetchall()]
+    if "source" not in cols:
+        conn.execute("ALTER TABLE oportunidades ADD COLUMN source TEXT")

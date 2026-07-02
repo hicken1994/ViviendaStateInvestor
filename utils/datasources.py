@@ -87,11 +87,15 @@ def get_last_event_timestamp() -> str | None:
 
 def _detect_data_source() -> str:
     import pandas as pd
-    with get_conn_ro() as conn:
-        df = pd.read_sql("SELECT DISTINCT source FROM oportunidades WHERE source IS NOT NULL LIMIT 1", conn)
-    if not df.empty:
-        src = str(df["source"].iloc[0])
-        return {"idealista18": f"Idealista18 ({DATASET_YEAR})", "kaggle": f"Kaggle + Idealista18 ({DATASET_YEAR})"}.get(src, src.capitalize())
+    from utils.connection import get_conn_ro
+    try:
+        with get_conn_ro() as conn:
+            df = pd.read_sql("SELECT DISTINCT source FROM oportunidades WHERE source IS NOT NULL LIMIT 1", conn)
+        if not df.empty:
+            src = str(df["source"].iloc[0])
+            return {"idealista18": f"Idealista18 ({DATASET_YEAR})", "kaggle": f"Kaggle + Idealista18 ({DATASET_YEAR})"}.get(src, src.capitalize())
+    except Exception:
+        pass
     return "Dataset sintético"
 
 
