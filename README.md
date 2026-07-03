@@ -1,116 +1,149 @@
-# 🏠 Vivienda AI — Madrid Investment Intelligence
+# Vivienda AI — End-to-end Data Pipeline with ML Classification
 
-**Plataforma interactiva de análisis de inversión inmobiliaria** para el mercado de Madrid. Construida con Streamlit, combina datos simulados del mercado con un sistema de scoring multifactorial para ayudarte a identificar, comparar y vigilar oportunidades de inversión.
+**86,183 real properties · Multi-factor scoring · Random Forest classifier · Streamlit + Supabase**
 
-## ✨ Funcionalidades
+A production-grade data engineering and machine learning portfolio project. Ingests raw open data from multiple sources, transforms it through an ETL pipeline, persists it in Supabase (PostgreSQL), caches locally in SQLite, and serves interactive ML-powered predictions via a Streamlit app.
 
-| Funcionalidad | Descripción |
+---
+
+## Architecture
+
+```
+Idealista18 (RDA) ─┐
+                   ├──► ETL (utils/etl.py) ──► Supabase ──► Sync ──► SQLite ──► Streamlit
+Kaggle (CSV) ─────┘                        PostgreSQL       cache          UI
+                                                              │
+                                                         RandomForest
+                                                         Classifier
+                                                         (scikit-learn)
+```
+
+- **Ingestion**: `utils/etl.py` reads Idealista18 (94K rows in RDA format) and Kaggle Madrid dataset (CSV), transforms to unified schema, uploads to Supabase via batch REST upsert
+- **Storage**: Supabase (PostgreSQL) as persistent source of truth, SQLite as local cache with WAL mode
+- **Sync**: `utils/supabase_sync.py` pulls all 6 tables from Supabase → local SQLite with pagination (1000 rows/request)
+- **Scoring**: Rule-based multi-factor system (utils/profiles.py) — 5 dimensions weighted by investor profile
+- **ML**: RandomForestClassifier (100 trees, 9 features) trained on all 86K properties — predicts COMPRAR/NEGOCIAR/DESCARTAR with metrics displayed in the app
+
+---
+
+## ML Model
+
+| Metric | Value |
 |---|---|
-| **📊 Dashboard global** | KPIs del mercado, distribución de scores, top barrios por oportunidad y feed de eventos recientes |
-| **📡 Radar de inversión** | Lista priorizada de propiedades con scoring según tu perfil. Incluye simulación de mercado y comparación lateral |
-| **🗺️ Mapa de concentración** | Mapa térmico (HeatmapLayer) con PyDeck para visualizar zonas calientes de inversión en Madrid |
-| **🏠 Análisis detallado** | Simulación completa de compra: hipoteca, reforma, alquiler, cashflow, ROI y recomendación personalizada |
-| **🤖 AI Copilot** | Dos modos: análisis de mercado con scatter plots y análisis individual de propiedades con precio objetivo |
-| **⚖️ Comparador** | Compara 2+ propiedades lado a lado con radar overlay, tabla detallada y simulación simultánea |
-| **🚨 Alertas + Watchlist** | Feed de eventos del mercado (price drops, yield ups, flash drops) con watchlist de propiedades y barrios |
-| **🔥 Flash Drops** | Ofertas temporales con descuento agresivo y expiración visible |
+| Algorithm | RandomForestClassifier |
+| Features | 9 (score_descuento, score_precio, score_liquidez, score_tamano, score_ruido, precio_total, metros, precio_m2, rentabilidad_estimada) |
+| Target | decision (COMPRAR / NEGOCIAR / DESCARTAR) |
+| Train/Test split | 80/20 stratified |
+| Hyperparameters | n_estimators=100, max_depth=12 |
 
-## 🧠 Sistema de Scoring
+View live metrics, feature importance, classification report, and confusion matrix at `pages/9_Modelo.py` in the app.
 
-Cada propiedad recibe una puntuación de **0 a 100** basada en 5 dimensiones ponderadas según tu perfil de inversor:
+---
 
-| Dimensión | Máximo | Descripción |
+## Dataset
+
+- **86,183 properties** across Madrid
+- **21 districts** with rental prices per m²
+- Sources: Idealista18 open dataset (2018) + Kaggle Madrid real estate
+- Rental prices: `barrio_rent` table with 21 barrios
+- All data persisted in Supabase, synced to local SQLite on app boot
+
+---
+
+## Scoring system
+
+5 dimensions, weighted by investor profile (Básico / Intermedio / Avanzado):
+
+| Dimension | Max | Description |
 |---|---|---|
-| **Descuento** | 40 pts | Diferencia entre precio de venta y valor de mercado del barrio |
-| **Precio vs Barrio** | 25 pts | Ratio precio/m² de la propiedad vs media del barrio |
-| **Liquidez** | 15 pts | Facilidad para alquilar según el tamaño (50–90 m² puntúa más) |
-| **Tamaño** | 10 pts | Metros cuadrados útiles (más de 60 m² puntúa más) |
-| **Ruido** | 10 pts | Nivel de ruido estimado de la zona |
+| Descuento | 40 pts | Price vs market value in barrio |
+| Precio vs Barrio | 25 pts | Price per m² vs barrio average |
+| Liquidez | 15 pts | Rental liquidity (50-90 m² optimal) |
+| Tamaño | 10 pts | Surface area (>60 m² scores higher) |
+| Ruido | 10 pts | Estimated noise level of zone |
 
-Tres perfiles ajustan los pesos y umbrales:
+---
 
-- **🟢 Básico** — Prioriza seguridad y cashflow positivo. Peso extra en liquidez y ruido
-- **🟡 Intermedio** — Equilibrio entre rentabilidad y riesgo
-- **🔴 Avanzado** — Máxima rentabilidad. Peso extra en descuento y precio
+## Tech stack
 
-## 🏛️ Arquitectura
+- **Frontend**: Streamlit 1.55
+- **Visualization**: Plotly, PyDeck
+- **Backend**: Python 3.14, SQLite (WAL mode, connection pooling)
+- **Database**: Supabase (PostgreSQL with RLS) + SQLite local cache
+- **Auth**: Supabase Auth (email/password, magic link, Google OAuth)
+- **ML**: scikit-learn (RandomForestClassifier)
+- **Infrastructure**: Streamlit Cloud deployment
 
-```
-vivienda-ai/
-├── app.py                    # Dashboard global + sidebar + navegación
-├── pages/
-│   ├── 1_Radar.py            # Radar de oportunidades con scoring por perfil
-│   ├── 2_Mapa.py             # Mapa térmico con PyDeck
-│   ├── 3_propiedad.py        # Análisis detallado + simulación de inversión
-│   ├── 4_Analisis_Detallado.py  # AI Copilot (mercado / propiedad)
-│   ├── 5_Comparador.py       # Comparador lado a lado
-│   └── 6_Alertas.py          # Alertas + watchlist
-├── utils/
-│   ├── services.py           # Capa de acceso a datos (consultas SQL tipadas)
-│   ├── db.py                 # Operaciones de escritura, simulación y esquema
-│   ├── profiles.py           # Estrategia de perfiles de inversión
-│   ├── scoring.py            # Cálculo de scores (delega a profiles)
-│   ├── history.py            # Generación sintética de histórico de precios
-│   ├── datasources.py        # Fuentes de datos y metadatos del dataset
-│   ├── charts.py             # Gráficos Plotly (radar, sparkline, comparador)
-│   ├── timefmt.py            # Formateo relativo de timestamps
-│   ├── images.py             # Imágenes deterministas por barrio
-│   └── tooltips.py           # Tooltips centralizados para toda la UI
-├── components/
-│   ├── cards.py              # Tarjeta de propiedad reutilizable
-│   ├── footer.py             # Footer con fuentes, versión y disclaimer
-│   └── score_help.py         # Explicación visual del desglose de scoring
-├── dataset_viviendas_madrid_3000.csv  # Dataset simulado
-├── real_estate.db            # Base de datos SQLite
-└── requirements.txt          # Dependencias
-```
+---
 
-## 🚀 Cómo ejecutar
+## Run locally
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/vivienda-ai.git
-cd vivienda-ai
-
-# 2. Crear y activar entorno virtual
-python -m venv venv
-source venv/bin/activate   # Linux/Mac
-venv\Scripts\activate      # Windows
-
-# 3. Instalar dependencias
+git clone https://github.com/julianrincon/viviendastateinvestor.git
+cd viviendastateinvestor
 pip install -r requirements.txt
-
-# 4. Ejecutar la app
 streamlit run app.py
 ```
 
-## 📊 Dataset
+Requires a `.streamlit/secrets.toml` with Supabase credentials. See `supabase_schema.sql` for the database schema.
 
-El dataset contiene **más de 3.000 propiedades** distribuidas en **21 distritos** de Madrid, generadas sintéticamente con:
+---
 
-- Precios por m² variables por barrio (2.500–7.000 €/m²)
-- Superficies entre 40 y 150 m²
-- Scores de oportunidad, descuento, rentabilidad y ruido
-- Coordenadas geográficas para visualización en mapa
+## Project structure
 
-Los precios de alquiler por barrio están precargados en la base de datos.
+```
+├── app.py                    # Auth + DB init + redirect
+├── pages/
+│   ├── 0_Bienvenida.py       # Onboarding tour
+│   ├── 1_Radar.py            # Radar with semáforo cards
+│   ├── 2_Mapa.py             # Heatmap (PyDeck)
+│   ├── 3_propiedad.py        # Property analysis + PDF export
+│   ├── 4_Analisis_Detallado.py  # AI Copilot
+│   ├── 5_Comparador.py       # Side-by-side comparison
+│   ├── 6_Alertas.py          # Notifications + watchlist
+│   ├── 7_Mi_Cuenta.py        # User profile
+│   ├── 8_Admin.py            # Admin panel
+│   └── 9_Modelo.py           # ML model metrics
+├── utils/
+│   ├── auth.py               # Supabase Auth (email, magic link, Google)
+│   ├── connection.py         # SQLite connection manager
+│   ├── db.py                 # DB operations, market simulation
+│   ├── services.py           # Query layer (typed SQL)
+│   ├── profiles.py           # Investment profiles + scoring
+│   ├── train_model.py        # RandomForest training + save/load
+│   ├── etl.py                # ETL pipeline (Idealista18 + Kaggle → Supabase)
+│   ├── supabase_sync.py      # Supabase → SQLite sync with pagination
+│   ├── migrations.py         # Schema migrations (v1-v7)
+│   ├── pdf_report.py         # FPDF2 report generation
+│   ├── notifications.py      # Real opportunity detection
+│   ├── email_notifier.py     # SendGrid email alerts
+│   └── user_store.py         # Supabase preferences + watchlist CRUD
+├── components/
+│   ├── sidebar.py            # Shared sidebar with nav + notifications
+│   ├── footer.py             # Data source footer
+│   └── score_help.py         # Score breakdown UI
+├── supabase_schema.sql       # PostgreSQL DDL
+├── requirements.txt          # Dependencies
+└── model/                    # Trained model artifacts (generated)
+```
 
-## 📡 Fuentes de datos de referencia
+---
 
-- **INE** — Instituto Nacional de Estadística
-- **Ministerio de Transportes, Movilidad y Agenda Urbana**
-- **Idealista** — Portal inmobiliario
-- **Fotocasa** — Portal inmobiliario
+## Key architectural decisions
 
-> ⚠️ Los datos mostrados son simulaciones educativas. No constituyen asesoramiento financiero.
+- **Hybrid storage**: Supabase as persistent truth, SQLite as read cache — avoids rewriting the data access layer while keeping data alive across Streamlit Cloud deploys
+- **Batch upsert**: 300 rows/batch for 86K properties via REST API (~60s total)
+- **Paginated sync**: Supabase free tier caps at 1000 rows/response — `range()` in loop fetches all rows
+- **Rule-based scoring + ML**: Rule system is transparent and explainable; ML adds predictive power. Both coexist in the app
+- **Same-page PDF generation**: FPDF2 (pure Python, no system deps) works on Streamlit Cloud without wkhtmltopdf
 
-## 🛠️ Tech Stack
+---
 
-- **Frontend**: [Streamlit](https://streamlit.io)
-- **Gráficos**: Plotly, PyDeck
-- **Backend**: Python 3.12, SQLite, Pandas, NumPy
-- **Scoring**: Modelo multifactorial con ponderación por perfil
+## What I learned
 
-## 📝 Licencia
-
-Todos los derechos reservados.
+- Streamlit's single-threaded model shapes the entire architecture — caching, session state placement, and rerun management matter
+- Supabase REST API is strict about type casting (INTEGER columns reject float JSON) — ETL must cast before upload
+- FPDF2's built-in fonts are Latin-1 only — Unicode text needs explicit TTF font registration
+- Magic link auth requires zero config with Supabase; Google OAuth needs client ID/secret setup
+- 86K properties + 9 features fit in <10MB — RandomForest trains in seconds, model file is ~2MB
+- The product didn't sell, but the architecture is a stronger career signal than any "SaaS that made €0"
