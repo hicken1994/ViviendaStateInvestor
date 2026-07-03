@@ -24,7 +24,7 @@ def load_data() -> pd.DataFrame:
         df = pd.read_sql("""
             SELECT
                 score_descuento, score_precio, score_liquidez,
-                score_tamano, score_ruido,
+                score_tamano,
                 precio_total, metros, precio_m2, rentabilidad_estimada,
                 decision
             FROM oportunidades
@@ -40,7 +40,7 @@ def train(df: pd.DataFrame) -> dict:
 
     feature_cols = [
         "score_descuento", "score_precio", "score_liquidez",
-        "score_tamano", "score_ruido",
+        "score_tamano",
         "precio_total", "metros", "precio_m2", "rentabilidad_estimada",
     ]
 

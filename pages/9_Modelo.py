@@ -79,7 +79,7 @@ st.divider()
 st.markdown("### Features del modelo")
 feature_cols = [
     "score_descuento", "score_precio", "score_liquidez",
-    "score_tamano", "score_ruido",
+    "score_tamano",
     "precio_total", "metros", "precio_m2", "rentabilidad_estimada",
 ]
 st.code("\n".join(f"  • {c}" for c in feature_cols))
