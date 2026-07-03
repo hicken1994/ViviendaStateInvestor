@@ -5,9 +5,6 @@ import logging
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-from sklearn.model_selection import train_test_split
 
 from utils.connection import get_conn_ro
 
@@ -37,6 +34,10 @@ def load_data() -> pd.DataFrame:
 
 
 def train(df: pd.DataFrame) -> dict:
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+    from sklearn.model_selection import train_test_split
+
     feature_cols = [
         "score_descuento", "score_precio", "score_liquidez",
         "score_tamano", "score_ruido",
