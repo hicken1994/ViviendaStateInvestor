@@ -26,18 +26,15 @@ def load_data() -> pd.DataFrame:
                 score_descuento, score_precio, score_liquidez,
                 score_tamano,
                 precio_total, metros, precio_m2, rentabilidad_estimada,
-                decision, opportunity_score
+                opportunity_score
             FROM oportunidades
+            WHERE opportunity_score IS NOT NULL
         """, conn)
     if df.empty:
         return df
-    has_decision = df["decision"].notna() & (df["decision"] != "")
-    if not has_decision.any():
-        df["decision"] = df["opportunity_score"].apply(
-            lambda s: "COMPRAR" if s >= 70 else ("NEGOCIAR" if s >= 50 else "DESCARTAR")
-        )
-    else:
-        df = df[has_decision].copy()
+    df["decision"] = df["opportunity_score"].apply(
+        lambda s: "COMPRAR" if s >= 70 else ("NEGOCIAR" if s >= 50 else "DESCARTAR")
+    )
     return df
 
 
