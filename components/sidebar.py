@@ -97,6 +97,7 @@ def render_sidebar() -> dict:
         ("🤖 AI Copilot", "pages/4_Analisis_Detallado.py"),
         ("⚖️ Comparador", "pages/5_Comparador.py"),
         ("🚨 Alertas", "pages/6_Alertas.py"),
+        ("🔍 Explorador", "pages/10_Explorador.py"),
         ("🤖 Modelo ML", "pages/9_Modelo.py"),
     ]
     for label, page in nav_items:

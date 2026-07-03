@@ -103,7 +103,8 @@ Requires a `.streamlit/secrets.toml` with Supabase credentials. See `supabase_sc
 │   ├── 6_Alertas.py          # Notifications + watchlist
 │   ├── 7_Mi_Cuenta.py        # User profile
 │   ├── 8_Admin.py            # Admin panel
-│   └── 9_Modelo.py           # ML model metrics
+│   ├── 9_Modelo.py           # ML model metrics
+│   └── 10_Explorador.py      # Full data explorer with ML predictions
 ├── utils/
 │   ├── auth.py               # Supabase Auth (email, magic link, Google)
 │   ├── connection.py         # SQLite connection manager
@@ -124,6 +125,10 @@ Requires a `.streamlit/secrets.toml` with Supabase credentials. See `supabase_sc
 │   └── score_help.py         # Score breakdown UI
 ├── supabase_schema.sql       # PostgreSQL DDL
 ├── requirements.txt          # Dependencies
+├── tests/
+│   ├── __init__.py
+│   ├── test_scoring.py       # 8 tests for rule-based scoring
+│   └── test_model.py         # 4 tests for ML pipeline
 └── model/                    # Trained model artifacts (generated)
 ```
 
@@ -146,4 +151,6 @@ Requires a `.streamlit/secrets.toml` with Supabase credentials. See `supabase_sc
 - FPDF2's built-in fonts are Latin-1 only — Unicode text needs explicit TTF font registration
 - Magic link auth requires zero config with Supabase; Google OAuth needs client ID/secret setup
 - 86K properties + 9 features fit in <10MB — RandomForest trains in seconds, model file is ~2MB
+- Testing rule-based scoring is cheap (no DB needed, pure arithmetic) — 8 tests run in <0.5s
+- ML tests verify end-to-end: load → train → predict → label sanity. Catches regressions before deploy
 - The product didn't sell, but the architecture is a stronger career signal than any "SaaS that made €0"
