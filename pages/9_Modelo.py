@@ -9,7 +9,7 @@ st.set_page_config(page_title="Modelo ML", page_icon="🤖", layout="wide")
 require_auth()
 
 st.markdown("# 🤖 Modelo de clasificación — Random Forest")
-st.caption("Predicción de decisión de inversión (COMPRAR / NEGOCIAR / DESCARTAR) basada en 9 features.")
+st.caption("Predicción de decisión de inversión (COMPRAR / NEGOCIAR / DESCARTAR) basada en 8 features.")
 
 @st.cache_resource
 def _train():
@@ -17,8 +17,9 @@ def _train():
 
 clf, metrics = _train()
 
-if clf is None or not metrics:
-    st.warning("No hay datos suficientes para entrenar el modelo.")
+if clf is None or not metrics or metrics.get("accuracy", 0) == 0:
+    error_msg = metrics.get("error", "No hay datos suficientes para entrenar el modelo.")
+    st.warning(error_msg)
     st.stop()
 
 col1, col2, col3 = st.columns(3)

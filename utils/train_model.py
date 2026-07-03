@@ -62,8 +62,13 @@ def train(df: pd.DataFrame) -> dict:
     X = X[valid]
     y_num = y_num[valid].astype(int)
 
+    present_labels = sorted(y_num.unique())
+    if len(present_labels) < 2:
+        return None, {"accuracy": 0, "error": "Solo una clase presente en los datos"}
+
+    stratify_param = y_num if y_num.value_counts().min() >= 2 else None
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y_num, test_size=0.2, random_state=42, stratify=y_num
+        X, y_num, test_size=0.2, random_state=42, stratify=stratify_param
     )
 
     clf = RandomForestClassifier(
@@ -73,8 +78,8 @@ def train(df: pd.DataFrame) -> dict:
 
     y_pred = clf.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
-    cm = confusion_matrix(y_test, y_pred)
-    report = classification_report(y_test, y_pred, output_dict=True, target_names=["DESCARTAR", "NEGOCIAR", "COMPRAR"])
+    cm = confusion_matrix(y_test, y_pred, labels=[0, 1, 2])
+    report = classification_report(y_test, y_pred, output_dict=True, labels=[0, 1, 2], target_names=["DESCARTAR", "NEGOCIAR", "COMPRAR"], zero_division=0)
 
     feature_importance = [
         {"feature": col, "importance": round(float(v), 4)}
@@ -121,5 +126,8 @@ def train_and_save():
         logger.warning("No hay datos para entrenar")
         return None, None
     clf, metrics = train(df)
+    if clf is None:
+        logger.warning("Entrenamiento fallo: %s", metrics.get("error", "error desconocido"))
+        return None, metrics
     save_model(clf, metrics)
     return clf, metrics
