@@ -18,7 +18,7 @@ def _train():
 clf, metrics = _train()
 
 if clf is None or not metrics or metrics.get("accuracy", 0) == 0:
-    error_msg = metrics.get("error", "No hay datos suficientes para entrenar el modelo.")
+    error_msg = (metrics or {}).get("error", "No hay datos suficientes para entrenar el modelo.")
     st.warning(error_msg)
     st.stop()
 
