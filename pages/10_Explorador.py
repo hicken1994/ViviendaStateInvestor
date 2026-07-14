@@ -108,7 +108,7 @@ st.dataframe(
         "opportunity_score": "{:.1f}",
         "rentabilidad_estimada": "{:.1f}%",
         "metros": "{:.0f}",
-    }),
+    }, na_rep="-"),
     width="stretch",
     height=600,
     use_container_width=True,
