@@ -8,14 +8,14 @@ A production-grade data engineering and machine learning portfolio project. Inge
 
 ## Architecture
 
-```
-Idealista18 (RDA) ─┐
-                   ├──► ETL (utils/etl.py) ──► Supabase ──► Sync ──► SQLite ──► Streamlit
-Kaggle (CSV) ─────┘                        PostgreSQL       cache          UI
-                                                              │
-                                                         RandomForest
-                                                         Classifier
-                                                         (scikit-learn)
+```mermaid
+flowchart LR
+    A["Idealista18 + Kaggle"] --> B["ETL Pipeline"]
+    B --> C["Supabase PostgreSQL"]
+    C --> D["SQLite Cache (WAL)"]
+    D --> E["Streamlit App"]
+    D --> F["RandomForest ML"]
+    F --> E
 ```
 
 - **Ingestion**: `utils/etl.py` reads Idealista18 (94K rows in RDA format) and Kaggle Madrid dataset (CSV), transforms to unified schema, uploads to Supabase via batch REST upsert
@@ -23,6 +23,8 @@ Kaggle (CSV) ─────┘                        PostgreSQL       cache   
 - **Sync**: `utils/supabase_sync.py` pulls all 6 tables from Supabase → local SQLite with pagination (1000 rows/request)
 - **Scoring**: Rule-based multi-factor system (utils/profiles.py) — 5 dimensions weighted by investor profile
 - **ML**: RandomForestClassifier (100 trees, 9 features) trained on all 86K properties — predicts COMPRAR/NEGOCIAR/DESCARTAR with metrics displayed in the app
+
+> **Full architecture documentation**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — data pipeline deep-dive, storage strategy, scoring engine, design decisions with trade-offs, and scalability considerations.
 
 ---
 
